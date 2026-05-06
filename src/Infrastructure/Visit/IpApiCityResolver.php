@@ -3,6 +3,7 @@
 namespace Infrastructure\Visit;
 
 use Domain\Visit\CityResolver;
+use Illuminate\Http\Client\Response;
 use Illuminate\Support\Facades\Http;
 use Throwable;
 
@@ -15,10 +16,17 @@ final class IpApiCityResolver implements CityResolver
         }
 
         try {
-            $payload = Http::timeout(3)
+            /**
+             * @var Response $response
+             *
+             * @psalm-suppress MixedAssignment
+             * @psalm-suppress PossiblyUndefinedMethod Laravel HTTP facade returns a pending request at runtime.
+             */
+            $response = Http::timeout(3)
                 ->acceptJson()
-                ->get("http://ip-api.com/json/{$ip}", ['fields' => 'status,city'])
-                ->json();
+                ->get("http://ip-api.com/json/{$ip}", ['fields' => 'status,city']);
+            /** @psalm-suppress PossiblyUndefinedMethod */
+            $payload = $response->json();
         } catch (Throwable) {
             return 'Unknown';
         }

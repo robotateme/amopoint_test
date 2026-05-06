@@ -1,6 +1,6 @@
 <?php
 
-namespace Infrastructure\Persistence\Models;
+namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
 
@@ -14,11 +14,4 @@ final class JokeRecord extends Model
         'setup',
         'punchline',
     ];
-
-    protected function casts(): array
-    {
-        return [
-            'external_id' => 'integer',
-        ];
-    }
 }

@@ -4,6 +4,7 @@ namespace Infrastructure\Joke;
 
 use Domain\Joke\Joke;
 use Domain\Joke\JokeProvider;
+use Illuminate\Http\Client\Response;
 use Illuminate\Support\Facades\Http;
 use RuntimeException;
 
@@ -11,11 +12,18 @@ final class OfficialJokeApiClient implements JokeProvider
 {
     public function random(): Joke
     {
-        $payload = Http::timeout(10)
+        /**
+         * @var Response $response
+         *
+         * @psalm-suppress MixedAssignment
+         * @psalm-suppress PossiblyUndefinedMethod Laravel HTTP facade returns a pending request at runtime.
+         */
+        $response = Http::timeout(10)
             ->acceptJson()
             ->get('https://official-joke-api.appspot.com/random_joke')
-            ->throw()
-            ->json();
+            ->throw();
+        /** @psalm-suppress MixedMethodCall */
+        $payload = $response->json();
 
         if (! is_array($payload)) {
             throw new RuntimeException('Official Joke API returned an invalid response.');

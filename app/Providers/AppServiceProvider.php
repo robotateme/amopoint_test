@@ -2,17 +2,23 @@
 
 namespace App\Providers;
 
+use Application\Auth\JwtTokenService;
+use Application\Auth\StatsCredentials;
 use Domain\Joke\JokeProvider;
 use Domain\Joke\JokeRepository;
 use Domain\Visit\CityResolver;
 use Domain\Visit\VisitRepository;
 use Domain\Visit\VisitStatisticsCache;
+use Illuminate\Support\ServiceProvider;
+use Infrastructure\Auth\HmacJwtTokenService;
+use Infrastructure\Auth\LaravelStatsCredentials;
+use Infrastructure\Cache\LaravelVisitStatisticsCache;
 use Infrastructure\Joke\EloquentJokeRepository;
 use Infrastructure\Joke\OfficialJokeApiClient;
-use Infrastructure\Cache\LaravelVisitStatisticsCache;
+use Infrastructure\Persistence\LaravelConfigModelResolver;
+use Infrastructure\Persistence\ModelResolver;
 use Infrastructure\Visit\EloquentVisitRepository;
 use Infrastructure\Visit\IpApiCityResolver;
-use Illuminate\Support\ServiceProvider;
 
 class AppServiceProvider extends ServiceProvider
 {
@@ -26,6 +32,9 @@ class AppServiceProvider extends ServiceProvider
         $this->app->bind(CityResolver::class, IpApiCityResolver::class);
         $this->app->bind(VisitRepository::class, EloquentVisitRepository::class);
         $this->app->bind(VisitStatisticsCache::class, LaravelVisitStatisticsCache::class);
+        $this->app->bind(ModelResolver::class, LaravelConfigModelResolver::class);
+        $this->app->bind(JwtTokenService::class, HmacJwtTokenService::class);
+        $this->app->bind(StatsCredentials::class, LaravelStatsCredentials::class);
     }
 
     /**
