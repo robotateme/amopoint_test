@@ -1,13 +1,27 @@
 <template>
     <section class="dashboard-panel">
-        <div class="panel-header">
-            <div>
-                <h2>{{ title }}</h2>
-                <p>{{ subtitle }}</p>
+        <div class="panel-frame">
+            <div class="panel-header">
+                <div class="panel-title">
+                    <span class="panel-index">{{ indexLabel }}</span>
+                    <div>
+                        <h2>{{ title }}</h2>
+                        <p>{{ subtitle }}</p>
+                    </div>
+                </div>
+                <div class="panel-meta">
+                    <span :class="['panel-signal', metaTone]" />
+                    <slot name="meta" />
+                </div>
             </div>
-            <slot name="meta" />
+            <div class="chart-shell">
+                <span class="chart-corner top-left" />
+                <span class="chart-corner top-right" />
+                <span class="chart-corner bottom-left" />
+                <span class="chart-corner bottom-right" />
+                <div ref="chartElement" class="chart-surface" />
+            </div>
         </div>
-        <div ref="chartElement" class="chart-surface" />
     </section>
 </template>
 
@@ -46,6 +60,14 @@ const props = defineProps({
         type: String,
         required: true,
     },
+    indexLabel: {
+        type: String,
+        default: 'SEC 01',
+    },
+    metaTone: {
+        type: String,
+        default: '',
+    },
 });
 
 const chartElement = ref(null);
@@ -58,7 +80,7 @@ function renderChart() {
     }
 
     if (!chart) {
-        chart = echarts.init(chartElement.value, 'amopoint');
+        chart = echarts.init(chartElement.value);
     }
 
     chart.setOption(props.option, true);

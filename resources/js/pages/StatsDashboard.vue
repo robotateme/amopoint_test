@@ -1,26 +1,50 @@
 <template>
     <main class="stats-shell">
+        <section class="stats-topline" aria-label="System status">
+            <div class="topline-block">sector koprulu / visit telemetry</div>
+            <div class="topline-block">window {{ hours }}h / uplink stable</div>
+        </section>
+
         <header class="stats-hero">
-            <div>
-                <p class="eyebrow">Live analytics</p>
+            <div class="hero-copy-block">
+                <p class="eyebrow">Command relay // brood telemetry</p>
                 <h1>Статистика посещений</h1>
                 <p class="hero-copy">
-                    Уникальные визиты, города и активность за последние {{ hours }} ч.
+                    Тактическая сводка по уникальным визитам, активным городам и часовым пикам
+                    за последние {{ hours }} часов.
                 </p>
+
+                <div class="hero-diagnostics" aria-label="Diagnostic status">
+                    <article class="diagnostic-cell">
+                        <strong>{{ totalVisits }}</strong>
+                        <span>signal traces</span>
+                    </article>
+                    <article class="diagnostic-cell">
+                        <strong>{{ peakHour }}</strong>
+                        <span>peak vector</span>
+                    </article>
+                    <article class="diagnostic-cell">
+                        <strong>{{ topCity }}</strong>
+                        <span>dominant sector</span>
+                    </article>
+                </div>
             </div>
-            <div class="hero-metrics" aria-label="Visit summary">
-                <div>
-                    <span>{{ totalVisits }}</span>
-                    <small>уникальных</small>
+            <div class="hero-side">
+                <div class="hero-metrics" aria-label="Visit summary">
+                    <div>
+                        <span>{{ totalVisits }}</span>
+                        <small>уникальных</small>
+                    </div>
+                    <div>
+                        <span>{{ topCity }}</span>
+                        <small>топ город</small>
+                    </div>
+                    <div>
+                        <span>{{ peakHour }}</span>
+                        <small>пик</small>
+                    </div>
                 </div>
-                <div>
-                    <span>{{ topCity }}</span>
-                    <small>топ город</small>
-                </div>
-                <div>
-                    <span>{{ peakHour }}</span>
-                    <small>пик</small>
-                </div>
+                <div class="hero-radar" aria-hidden="true" />
             </div>
         </header>
 
@@ -43,6 +67,7 @@
             <EChartPanel
                 title="Посещения по часам"
                 subtitle="Горизонтальная диаграмма уникальных визитов"
+                index-label="SEC 01"
                 :option="hourChartOption"
             >
                 <template #meta>
@@ -53,12 +78,29 @@
             <EChartPanel
                 title="Города"
                 subtitle="Распределение уникальных посетителей"
+                index-label="SEC 02"
+                meta-tone="warning"
                 :option="cityChartOption"
             >
                 <template #meta>
                     <span class="panel-badge accent">{{ cityRows.length }}</span>
                 </template>
             </EChartPanel>
+        </section>
+
+        <section class="sectors-grid" aria-label="Additional telemetry">
+            <article class="sector-card">
+                <span class="sector-label">telemetry window</span>
+                <strong class="sector-value">{{ hours }} часов</strong>
+            </article>
+            <article class="sector-card">
+                <span class="sector-label">coverage sectors</span>
+                <strong class="sector-value">{{ cityRows.length }} городов</strong>
+            </article>
+            <article class="sector-card">
+                <span class="sector-label">uplink density</span>
+                <strong class="sector-value">{{ averageByHour }} / час</strong>
+            </article>
         </section>
     </main>
 </template>
@@ -72,7 +114,7 @@ const hours = payload.hours || 24;
 const hourRows = payload.stats?.hours || [];
 const cityRows = payload.stats?.cities || [];
 
-const palette = ['#2563eb', '#0f766e', '#dc2626', '#ca8a04', '#7c3aed', '#0891b2', '#db2777'];
+const palette = ['#6ce5cf', '#ffd166', '#78f0d6', '#3e90ff', '#ff8f70', '#8f7dff', '#5ae6ff'];
 
 const totalVisits = computed(() => cityRows.reduce((sum, row) => sum + Number(row.visits || 0), 0));
 
@@ -93,13 +135,14 @@ const averageByHour = computed(() => {
 });
 
 const hourChartOption = computed(() => ({
-    color: ['#2563eb'],
+    color: ['#6ce5cf'],
     tooltip: {
         trigger: 'axis',
         axisPointer: { type: 'shadow' },
-        backgroundColor: '#111827',
-        borderWidth: 0,
-        textStyle: { color: '#f8fafc' },
+        backgroundColor: 'rgba(4, 14, 22, .96)',
+        borderColor: 'rgba(108, 229, 207, .24)',
+        borderWidth: 1,
+        textStyle: { color: '#ecfffb' },
     },
     grid: {
         left: 110,
@@ -111,13 +154,15 @@ const hourChartOption = computed(() => ({
         type: 'value',
         minInterval: 1,
         axisLine: { show: false },
-        splitLine: { lineStyle: { color: '#dbe4ef' } },
+        axisLabel: { color: '#7c9f9c' },
+        splitLine: { lineStyle: { color: 'rgba(108, 229, 207, .12)' } },
     },
     yAxis: {
         type: 'category',
         data: hourRows.map((row) => row.hour),
         axisLine: { show: false },
         axisTick: { show: false },
+        axisLabel: { color: '#cbe1dd' },
     },
     series: [{
         name: 'Уникальные посещения',
@@ -125,7 +170,9 @@ const hourChartOption = computed(() => ({
         data: hourRows.map((row) => row.visits),
         barWidth: 18,
         itemStyle: {
-            borderRadius: [0, 8, 8, 0],
+            borderRadius: [0, 4, 4, 0],
+            borderColor: 'rgba(199, 255, 245, .42)',
+            borderWidth: 1,
             color: {
                 type: 'linear',
                 x: 0,
@@ -133,8 +180,9 @@ const hourChartOption = computed(() => ({
                 x2: 1,
                 y2: 0,
                 colorStops: [
-                    { offset: 0, color: '#0f766e' },
-                    { offset: 1, color: '#2563eb' },
+                    { offset: 0, color: '#168c7a' },
+                    { offset: 0.55, color: '#6ce5cf' },
+                    { offset: 1, color: '#ffd166' },
                 ],
             },
         },
@@ -145,14 +193,18 @@ const cityChartOption = computed(() => ({
     color: palette,
     tooltip: {
         trigger: 'item',
-        backgroundColor: '#111827',
-        borderWidth: 0,
-        textStyle: { color: '#f8fafc' },
+        backgroundColor: 'rgba(4, 14, 22, .96)',
+        borderColor: 'rgba(108, 229, 207, .24)',
+        borderWidth: 1,
+        textStyle: { color: '#ecfffb' },
     },
     legend: {
         bottom: 0,
         left: 'center',
         icon: 'circle',
+        textStyle: {
+            color: '#8eb0ad',
+        },
     },
     series: [{
         name: 'Город',
@@ -161,12 +213,12 @@ const cityChartOption = computed(() => ({
         center: ['50%', '45%'],
         avoidLabelOverlap: true,
         itemStyle: {
-            borderColor: '#ffffff',
+            borderColor: '#041119',
             borderWidth: 3,
-            borderRadius: 6,
+            borderRadius: 4,
         },
         label: {
-            color: '#334155',
+            color: '#d6fff7',
             formatter: '{b}: {c}',
         },
         data: cityRows.map((row) => ({

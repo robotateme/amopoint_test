@@ -6,24 +6,52 @@
     <title>Stats login</title>
     @vite(['resources/css/app.css'])
 </head>
-<body class="min-h-screen bg-slate-950 text-slate-100">
-<main class="mx-auto flex min-h-screen w-full max-w-sm items-center px-4">
-    <form method="post" action="{{ route('stats.login.store') }}" class="w-full space-y-4">
-        @csrf
-        <h1 class="text-xl font-semibold">Статистика</h1>
-        <label class="block space-y-1">
-            <span class="text-sm text-slate-300">Логин</span>
-            <input name="login" value="{{ old('login') }}" autocomplete="username" class="w-full rounded border border-slate-700 bg-slate-900 px-3 py-2" required>
-        </label>
-        <label class="block space-y-1">
-            <span class="text-sm text-slate-300">Пароль</span>
-            <input name="password" type="password" autocomplete="current-password" class="w-full rounded border border-slate-700 bg-slate-900 px-3 py-2" required>
-        </label>
-        @error('login')
-        <p class="text-sm text-red-300">{{ $message }}</p>
-        @enderror
-        <button class="w-full rounded bg-emerald-500 px-3 py-2 font-medium text-slate-950" type="submit">Войти</button>
-    </form>
+<body class="stats-body">
+<main class="auth-layout">
+    <section class="auth-card" aria-labelledby="stats-login-title">
+        <header class="auth-header">
+            <p class="eyebrow">Command relay // secure access</p>
+            <h1 id="stats-login-title">Центр статистики</h1>
+            <p class="auth-copy">
+                Вход в тактическую панель мониторинга с почасовой активностью, секторами и сводкой по визитам.
+            </p>
+        </header>
+
+        <form method="post" action="{{ route('stats.login.store') }}" class="auth-form">
+            @csrf
+            <label class="auth-field">
+                <span class="auth-label">Логин</span>
+                <input
+                    name="login"
+                    value="{{ old('login') }}"
+                    autocomplete="username"
+                    class="auth-input"
+                    required
+                >
+            </label>
+            <label class="auth-field">
+                <span class="auth-label">Пароль</span>
+                <input
+                    name="password"
+                    type="password"
+                    autocomplete="current-password"
+                    class="auth-input"
+                    required
+                >
+            </label>
+            @error('login')
+            <p class="auth-error">{{ $message }}</p>
+            @enderror
+            <button class="auth-button" type="submit">
+                <span>Войти в сектор</span>
+            </button>
+        </form>
+
+        <footer class="auth-footer">
+            <span>uplink secured</span>
+            <span>jwt channel active</span>
+        </footer>
+    </section>
 </main>
 </body>
 </html>

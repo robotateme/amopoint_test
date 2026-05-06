@@ -6,7 +6,7 @@
     <title>Visit statistics</title>
     @vite(['resources/css/app.css', 'resources/js/app.js'])
 </head>
-<body>
+<body class="stats-body">
 <script>
     window.__VISIT_STATS__ = @json([
         'stats' => $stats,
