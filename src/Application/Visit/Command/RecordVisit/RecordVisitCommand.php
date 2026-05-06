@@ -1,6 +1,6 @@
 <?php
 
-namespace Application\Visit\RecordVisit;
+namespace Application\Visit\Command\RecordVisit;
 
 final readonly class RecordVisitCommand
 {
@@ -11,6 +11,5 @@ final readonly class RecordVisitCommand
         public ?string $userAgent,
         public ?string $pageUrl,
         public ?string $referrer,
-    ) {
-    }
+    ) {}
 }

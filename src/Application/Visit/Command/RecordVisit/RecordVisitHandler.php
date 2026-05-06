@@ -1,6 +1,6 @@
 <?php
 
-namespace Application\Visit\RecordVisit;
+namespace Application\Visit\Command\RecordVisit;
 
 use Domain\Visit\CityResolver;
 use Domain\Visit\Visit;
@@ -13,8 +13,7 @@ final readonly class RecordVisitHandler
         private CityResolver $cityResolver,
         private VisitRepository $visits,
         private VisitStatisticsCache $cache,
-    ) {
-    }
+    ) {}
 
     public function handle(RecordVisitCommand $command): void
     {
@@ -32,7 +31,7 @@ final readonly class RecordVisitHandler
             fingerprint: $fingerprint,
             ip: $command->ip,
             city: $this->cityResolver->resolve($command->ip),
-            device: $command->device ?: 'unknown',
+            device: $command->device !== null && $command->device !== '' ? $command->device : 'unknown',
             userAgent: $command->userAgent,
             pageUrl: $command->pageUrl,
             referrer: $command->referrer,

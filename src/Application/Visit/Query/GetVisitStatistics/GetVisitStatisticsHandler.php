@@ -1,6 +1,6 @@
 <?php
 
-namespace Application\Visit\GetVisitStatistics;
+namespace Application\Visit\Query\GetVisitStatistics;
 
 use Domain\Visit\VisitRepository;
 use Domain\Visit\VisitStatisticsCache;
@@ -10,8 +10,7 @@ final readonly class GetVisitStatisticsHandler
     public function __construct(
         private VisitRepository $visits,
         private VisitStatisticsCache $cache,
-    ) {
-    }
+    ) {}
 
     /**
      * @return array{hours: array<int, array{hour: string, visits: int}>, cities: array<int, array{city: string, visits: int}>}

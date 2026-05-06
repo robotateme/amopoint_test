@@ -10,16 +10,27 @@ final readonly class LaravelVisitStatisticsCache implements VisitStatisticsCache
 {
     private const VERSION_KEY = 'visit-statistics:version';
 
-    public function __construct(private Repository $cache)
-    {
-    }
+    public function __construct(private Repository $cache) {}
 
+    /**
+     * @param  Closure(): array{hours: array<int, array{hour: string, visits: int}>, cities: array<int, array{city: string, visits: int}>}  $callback
+     * @return array{hours: array<int, array{hour: string, visits: int}>, cities: array<int, array{city: string, visits: int}>}
+     */
     public function remember(int $hours, Closure $callback): array
     {
         $version = (int) $this->cache->get(self::VERSION_KEY, 1);
         $key = "visit-statistics:v{$version}:hours:{$hours}";
+        /** @var array{hours: array<int, array{hour: string, visits: int}>, cities: array<int, array{city: string, visits: int}>} $value */
+        $value = $this->cache->remember(
+            $key,
+            now()->addMinute(),
+            /**
+             * @return array{hours: array<int, array{hour: string, visits: int}>, cities: array<int, array{city: string, visits: int}>}
+             */
+            static fn (): array => $callback(),
+        );
 
-        return $this->cache->remember($key, now()->addMinute(), $callback);
+        return $value;
     }
 
     public function flush(): void

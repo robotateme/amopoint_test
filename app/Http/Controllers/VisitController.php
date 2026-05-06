@@ -2,8 +2,8 @@
 
 namespace App\Http\Controllers;
 
-use Application\Visit\RecordVisit\RecordVisitCommand;
-use Application\Visit\RecordVisit\RecordVisitHandler;
+use Application\Visit\Command\RecordVisit\RecordVisitCommand;
+use Application\Visit\Command\RecordVisit\RecordVisitHandler;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 

@@ -2,8 +2,8 @@
 
 namespace App\Console\Commands;
 
-use Application\Joke\FetchJoke\FetchJokeCommand as FetchJoke;
-use Application\Joke\FetchJoke\FetchJokeHandler;
+use Application\Joke\Command\FetchJoke\FetchJokeCommand as FetchJoke;
+use Application\Joke\Command\FetchJoke\FetchJokeHandler;
 use Illuminate\Console\Command;
 
 final class FetchJokeCommand extends Command
@@ -14,7 +14,7 @@ final class FetchJokeCommand extends Command
 
     public function handle(FetchJokeHandler $handler): int
     {
-        $joke = $handler->handle(new FetchJoke());
+        $joke = $handler->handle(new FetchJoke);
 
         $this->info(sprintf('Stored joke #%d: %s', $joke->externalId, $joke->setup));
 

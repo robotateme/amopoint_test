@@ -1,6 +1,6 @@
 <?php
 
-namespace Application\Joke\FetchJoke;
+namespace Application\Joke\Command\FetchJoke;
 
 use Domain\Joke\Joke;
 use Domain\Joke\JokeProvider;
@@ -11,8 +11,7 @@ final readonly class FetchJokeHandler
     public function __construct(
         private JokeProvider $provider,
         private JokeRepository $repository,
-    ) {
-    }
+    ) {}
 
     public function handle(FetchJokeCommand $command): Joke
     {
