@@ -2,8 +2,9 @@
 
 namespace Tests\Feature;
 
+use App\Models\JokeRecord;
+use Application\Auth\JwtTokenService;
 use Domain\Visit\CityResolver;
-use Infrastructure\Persistence\Models\JokeRecord;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Tests\TestCase;
 
@@ -13,7 +14,7 @@ final class ApplicationEndpointsTest extends TestCase
 
     public function test_jokes_endpoint_returns_stored_jokes(): void
     {
-        JokeRecord::create([
+        JokeRecord::query()->create([
             'external_id' => 10,
             'type' => 'general',
             'setup' => 'Setup',
@@ -50,14 +51,26 @@ final class ApplicationEndpointsTest extends TestCase
         ]);
     }
 
-    public function test_stats_page_requires_basic_auth(): void
+    public function test_stats_page_requires_jwt_auth(): void
     {
-        $this->get('/stats')->assertUnauthorized();
+        $this->get('/stats')->assertRedirect('/stats/login');
 
-        $this->withBasicAuth('admin', 'secret')
+        $token = $this->app->make(JwtTokenService::class)->issue('admin');
+
+        $this->withHeader('Authorization', "Bearer {$token}")
             ->get('/stats')
             ->assertOk()
             ->assertSee('id="stats-app"', false)
             ->assertSee('__VISIT_STATS__');
+    }
+
+    public function test_stats_login_issues_jwt_cookie(): void
+    {
+        $this->post('/stats/login', [
+            'login' => 'admin',
+            'password' => 'secret',
+        ])
+            ->assertRedirect('/stats')
+            ->assertCookie('stats_token');
     }
 }

@@ -38,6 +38,8 @@ return [
     'stats' => [
         'login' => env('STATS_LOGIN', 'admin'),
         'password' => env('STATS_PASSWORD', 'secret'),
+        'jwt_secret' => env('STATS_JWT_SECRET', env('APP_KEY')),
+        'jwt_ttl' => env('STATS_JWT_TTL', 3600),
     ],
 
 ];
