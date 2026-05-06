@@ -1,0 +1,39 @@
+app = "amopoint-test"
+primary_region = "waw"
+
+[build]
+  dockerfile = "Dockerfile"
+
+[deploy]
+  release_command = "php artisan migrate --force"
+
+[env]
+  APP_ENV = "production"
+  APP_DEBUG = "false"
+  APP_URL = "https://amopoint-test.fly.dev"
+  LOG_CHANNEL = "stderr"
+  LOG_LEVEL = "info"
+  CACHE_STORE = "database"
+  SESSION_DRIVER = "cookie"
+  QUEUE_CONNECTION = "sync"
+  DB_CONNECTION = "pgsql"
+
+[http_service]
+  internal_port = 8080
+  force_https = true
+  auto_stop_machines = "stop"
+  auto_start_machines = true
+  min_machines_running = 0
+  processes = ["app"]
+
+  [http_service.concurrency]
+    type = "connections"
+    soft_limit = 20
+    hard_limit = 25
+
+  [[http_service.checks]]
+    interval = "15s"
+    timeout = "5s"
+    grace_period = "20s"
+    method = "GET"
+    path = "/up"
