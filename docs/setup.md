@@ -57,9 +57,13 @@ STATS_LOGIN=admin
 STATS_PASSWORD=secret
 STATS_JWT_SECRET=
 STATS_JWT_TTL=3600
+STATS_RATE_LIMIT_REDIS_CONNECTION=cache
+STATS_RATE_LIMIT_MAX_ATTEMPTS=5
+STATS_RATE_LIMIT_WINDOW_SECONDS=60
 ```
 
 `/stats` использует JWT в `HttpOnly` cookie или Bearer token.
+Лимит на login построен как sliding window через Redis Lua script.
 
 ## Запуск без Sail
 

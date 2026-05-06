@@ -11,6 +11,8 @@ REDIS_HOST=redis
 
 Статистика посещений кешируется на одну минуту. При записи нового визита повышается version key, поэтому агрегаты инвалидируются без очистки всего кеша.
 
+Redis также используется для sliding-window rate limiting на `/stats/login` через Lua script resolver с `SCRIPT LOAD` и `EVALSHA`.
+
 Проверка ключей:
 
 ```bash

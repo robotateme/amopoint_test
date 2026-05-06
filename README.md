@@ -61,3 +61,4 @@ make RUNTIME=sail quality
 - PHPUnit 12
 - PHPStan level 8
 - Psalm level 1
+- Redis sliding-window rate limiting для `/stats/login`

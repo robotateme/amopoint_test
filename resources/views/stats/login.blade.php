@@ -39,9 +39,9 @@
                     required
                 >
             </label>
-            @error('login')
-            <p class="auth-error">{{ $message }}</p>
-            @enderror
+            @if (session('login_error'))
+            <p class="auth-error">{{ session('login_error') }}</p>
+            @endif
             <button class="auth-button" type="submit">
                 <span>Войти в сектор</span>
             </button>

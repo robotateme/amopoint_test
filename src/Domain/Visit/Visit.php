@@ -12,6 +12,5 @@ final readonly class Visit
         public ?string $userAgent,
         public ?string $pageUrl,
         public ?string $referrer,
-    ) {
-    }
+    ) {}
 }

@@ -59,6 +59,58 @@ final class StatsAuthAndCacheTest extends TestCase
             ->assertJson(['message' => 'Unauthenticated.']);
     }
 
+    public function test_stats_login_is_rate_limited_with_sliding_window(): void
+    {
+        config()->set('services.stats.rate_limit.max_attempts', 2);
+        config()->set('services.stats.rate_limit.window_seconds', 60);
+
+        $this->post('/stats/login', [
+            'login' => 'admin',
+            'password' => 'wrong-1',
+        ])
+            ->assertRedirect()
+            ->assertSessionHas('login_error', 'Invalid credentials.');
+
+        $this->post('/stats/login', [
+            'login' => 'admin',
+            'password' => 'wrong-2',
+        ])
+            ->assertRedirect()
+            ->assertSessionHas('login_error', 'Invalid credentials.');
+
+        $this->post('/stats/login', [
+            'login' => 'admin',
+            'password' => 'wrong-3',
+        ])
+            ->assertStatus(429)
+            ->assertSessionHas('login_error');
+    }
+
+    public function test_successful_login_clears_rate_limit_bucket(): void
+    {
+        config()->set('services.stats.rate_limit.max_attempts', 2);
+        config()->set('services.stats.rate_limit.window_seconds', 60);
+
+        $this->post('/stats/login', [
+            'login' => 'admin',
+            'password' => 'wrong',
+        ])
+            ->assertRedirect()
+            ->assertSessionHas('login_error', 'Invalid credentials.');
+
+        $this->post('/stats/login', [
+            'login' => 'admin',
+            'password' => 'secret',
+        ])->assertRedirect('/stats');
+
+        $this->post('/stats/login', [
+            'login' => 'admin',
+            'password' => 'wrong-again',
+        ])
+            ->assertStatus(302)
+            ->assertSessionHas('login_error', 'Invalid credentials.');
+    }
+
     public function test_visit_recording_invalidates_cached_statistics(): void
     {
         VisitRecord::query()->create([

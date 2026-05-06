@@ -40,6 +40,11 @@ return [
         'password' => env('STATS_PASSWORD', 'secret'),
         'jwt_secret' => env('STATS_JWT_SECRET', env('APP_KEY')),
         'jwt_ttl' => env('STATS_JWT_TTL', 3600),
+        'rate_limit' => [
+            'redis_connection' => env('STATS_RATE_LIMIT_REDIS_CONNECTION', 'cache'),
+            'max_attempts' => env('STATS_RATE_LIMIT_MAX_ATTEMPTS', 5),
+            'window_seconds' => env('STATS_RATE_LIMIT_WINDOW_SECONDS', 60),
+        ],
     ],
 
 ];

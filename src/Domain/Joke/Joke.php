@@ -9,6 +9,5 @@ final readonly class Joke
         public string $type,
         public string $setup,
         public string $punchline,
-    ) {
-    }
+    ) {}
 }
