@@ -1,0 +1,246 @@
+@import 'tailwindcss';
+
+@source '../../vendor/laravel/framework/src/Illuminate/Pagination/resources/views/*.blade.php';
+@source '../../storage/framework/views/*.php';
+@source '../**/*.blade.php';
+@source '../**/*.js';
+@source '../**/*.vue';
+
+@theme {
+    --font-sans: 'Instrument Sans', ui-sans-serif, system-ui, sans-serif, 'Apple Color Emoji', 'Segoe UI Emoji',
+        'Segoe UI Symbol', 'Noto Color Emoji';
+}
+
+:root {
+    color-scheme: light;
+    font-family: var(--font-sans);
+    color: #172033;
+    background: #eef3f8;
+}
+
+body {
+    min-width: 320px;
+    margin: 0;
+    background:
+        linear-gradient(135deg, rgba(15, 118, 110, .14), transparent 32%),
+        linear-gradient(315deg, rgba(37, 99, 235, .12), transparent 34%),
+        #eef3f8;
+}
+
+button,
+input,
+select,
+textarea {
+    font: inherit;
+}
+
+.stats-shell {
+    max-width: 1220px;
+    min-height: 100vh;
+    margin: 0 auto;
+    padding: 32px 18px 44px;
+}
+
+.stats-hero {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) minmax(340px, 470px);
+    gap: 24px;
+    align-items: end;
+    padding: 28px;
+    margin-bottom: 18px;
+    color: #f8fafc;
+    background:
+        linear-gradient(135deg, rgba(15, 23, 42, .96), rgba(29, 78, 216, .86)),
+        #111827;
+    border: 1px solid rgba(255, 255, 255, .16);
+    border-radius: 8px;
+    box-shadow: 0 24px 60px rgba(15, 23, 42, .22);
+}
+
+.eyebrow {
+    margin: 0 0 10px;
+    font-size: 12px;
+    font-weight: 700;
+    letter-spacing: .12em;
+    text-transform: uppercase;
+    color: #8dd7ca;
+}
+
+.stats-hero h1 {
+    margin: 0;
+    font-size: clamp(32px, 6vw, 64px);
+    line-height: .95;
+    letter-spacing: 0;
+}
+
+.hero-copy {
+    max-width: 620px;
+    margin: 18px 0 0;
+    color: #cbd5e1;
+    font-size: 16px;
+    line-height: 1.6;
+}
+
+.hero-metrics {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 10px;
+}
+
+.hero-metrics div,
+.stat-strip article,
+.dashboard-panel {
+    background: rgba(255, 255, 255, .94);
+    border: 1px solid rgba(148, 163, 184, .35);
+    border-radius: 8px;
+}
+
+.hero-metrics div {
+    min-height: 92px;
+    padding: 16px;
+    color: #172033;
+}
+
+.hero-metrics span,
+.stat-strip strong {
+    display: block;
+    overflow-wrap: anywhere;
+    font-weight: 800;
+    letter-spacing: 0;
+}
+
+.hero-metrics span {
+    font-size: clamp(18px, 2vw, 28px);
+    line-height: 1.1;
+}
+
+.hero-metrics small,
+.stat-strip span {
+    display: block;
+    margin-top: 8px;
+    color: #64748b;
+    font-size: 12px;
+    font-weight: 700;
+    text-transform: uppercase;
+}
+
+.stat-strip {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 14px;
+    margin-bottom: 18px;
+}
+
+.stat-strip article {
+    padding: 18px;
+}
+
+.stat-strip strong {
+    margin-top: 8px;
+    color: #0f766e;
+    font-size: 34px;
+    line-height: 1;
+}
+
+.charts-grid {
+    display: grid;
+    grid-template-columns: minmax(0, 1.25fr) minmax(340px, .75fr);
+    gap: 18px;
+}
+
+.dashboard-panel {
+    min-width: 0;
+    min-height: 430px;
+    padding: 18px;
+    box-shadow: 0 16px 40px rgba(51, 65, 85, .12);
+}
+
+.panel-header {
+    display: flex;
+    align-items: start;
+    justify-content: space-between;
+    gap: 16px;
+    min-height: 56px;
+    margin-bottom: 12px;
+}
+
+.panel-header h2 {
+    margin: 0;
+    color: #172033;
+    font-size: 18px;
+    line-height: 1.2;
+}
+
+.panel-header p {
+    margin: 6px 0 0;
+    color: #64748b;
+    font-size: 13px;
+    line-height: 1.4;
+}
+
+.panel-badge {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-width: 48px;
+    height: 32px;
+    padding: 0 12px;
+    color: #1d4ed8;
+    background: #dbeafe;
+    border-radius: 999px;
+    font-size: 13px;
+    font-weight: 800;
+}
+
+.panel-badge.accent {
+    color: #0f766e;
+    background: #ccfbf1;
+}
+
+.chart-surface {
+    width: 100%;
+    height: 340px;
+}
+
+@media (max-width: 940px) {
+    .stats-hero,
+    .charts-grid {
+        grid-template-columns: 1fr;
+    }
+
+    .hero-metrics {
+        grid-template-columns: repeat(3, minmax(0, 1fr));
+    }
+}
+
+@media (max-width: 680px) {
+    .stats-shell {
+        padding: 18px 12px 28px;
+    }
+
+    .stats-hero {
+        padding: 20px;
+    }
+
+    .hero-metrics,
+    .stat-strip {
+        grid-template-columns: 1fr;
+    }
+
+    .dashboard-panel {
+        min-height: 390px;
+        padding: 14px;
+    }
+
+    .panel-header {
+        display: block;
+    }
+
+    .panel-badge {
+        margin-top: 12px;
+    }
+
+    .chart-surface {
+        height: 300px;
+    }
+}
