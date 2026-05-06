@@ -4,12 +4,18 @@ namespace Infrastructure\Joke;
 
 use Domain\Joke\Joke;
 use Domain\Joke\JokeProvider;
+use Illuminate\Http\Client\ConnectionException;
+use Illuminate\Http\Client\RequestException;
 use Illuminate\Http\Client\Response;
 use Illuminate\Support\Facades\Http;
 use RuntimeException;
 
 final class OfficialJokeApiClient implements JokeProvider
 {
+    /**
+     * @throws RequestException
+     * @throws ConnectionException
+     */
     public function random(): Joke
     {
         /**

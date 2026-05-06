@@ -165,6 +165,43 @@ final class StatsAuthAndCacheTest extends TestCase
         ], $cities);
     }
 
+    public function test_stats_city_breakdown_uses_requested_hours_window(): void
+    {
+        VisitRecord::query()->insert([
+            'fingerprint' => 'recent-visitor',
+            'ip' => '198.51.100.10',
+            'city' => 'Recent',
+            'device' => 'desktop',
+            'user_agent' => 'Test Agent',
+            'page_url' => 'https://example.test/recent',
+            'referrer' => 'https://example.test/',
+            'created_at' => now()->subMinutes(20),
+            'updated_at' => now()->subMinutes(20),
+        ]);
+
+        VisitRecord::query()->insert([
+            'fingerprint' => 'stale-visitor',
+            'ip' => '198.51.100.20',
+            'city' => 'Stale',
+            'device' => 'mobile',
+            'user_agent' => 'Test Agent',
+            'page_url' => 'https://example.test/stale',
+            'referrer' => 'https://example.test/',
+            'created_at' => now()->subHours(3),
+            'updated_at' => now()->subHours(3),
+        ]);
+
+        $token = $this->app->make(JwtTokenService::class)->issue('admin');
+
+        $payload = $this->statsPayload(
+            $this->withHeader('Authorization', "Bearer {$token}")->get('/stats?hours=1')
+        );
+
+        $this->assertSame([
+            ['city' => 'Recent', 'visits' => 1],
+        ], $payload['stats']['cities']);
+    }
+
     /**
      * @param  TestResponse<Response>  $response
      * @return array{

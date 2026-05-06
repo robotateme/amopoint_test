@@ -84,7 +84,9 @@ final readonly class EloquentVisitRepository implements VisitRepository
      */
     private function searchQuery(Criteria $criteria): Builder
     {
-        return new EloquentCriteriaContext($this->query())->search($criteria);
+        $context = new EloquentCriteriaContext($this->query());
+
+        return $context->search($criteria);
     }
 
     /**
@@ -123,7 +125,7 @@ final readonly class EloquentVisitRepository implements VisitRepository
     {
         $value = $this->field($record, 'visits');
 
-        Assert::numeric($value, "Visit statistics field [visits] must be numeric.");
+        Assert::numeric($value, 'Visit statistics field [visits] must be numeric.');
 
         return (int) $value;
     }
