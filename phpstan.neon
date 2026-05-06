@@ -1,0 +1,19 @@
+parameters:
+    level: 8
+    paths:
+        - app
+        - bootstrap
+        - config
+        - database
+        - routes
+        - src
+        - tests
+    tmpDir: storage/framework/cache/phpstan
+    checkMissingIterableValueType: false
+    treatPhpDocTypesAsCertain: false
+    excludePaths:
+        analyse:
+            - bootstrap/cache/*
+            - storage/*
+            - vendor/*
+            - node_modules/*

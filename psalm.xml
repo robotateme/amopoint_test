@@ -1,0 +1,22 @@
+<?xml version="1.0"?>
+<psalm
+    errorLevel="1"
+    resolveFromConfigFile="true"
+    findUnusedBaselineEntry="true"
+    findUnusedCode="false"
+>
+    <projectFiles>
+        <directory name="app"/>
+        <directory name="src"/>
+        <ignoreFiles>
+            <file name="app/Console/Commands/FetchJokeCommand.php"/>
+            <directory name="bootstrap/cache"/>
+            <directory name="database/migrations"/>
+            <directory name="tests"/>
+        </ignoreFiles>
+    </projectFiles>
+    <issueHandlers>
+        <MissingOverrideAttribute errorLevel="suppress"/>
+        <ClassMustBeFinal errorLevel="suppress"/>
+    </issueHandlers>
+</psalm>

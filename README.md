@@ -1,25 +1,31 @@
 # Тестовое задание Amopoint
 
-Laravel 13 / PHP 8.3 приложение для тестового задания PHP-разработчика. В проекте есть импорт данных по расписанию, JSON-маршрут, браузерный скрипт фильтрации полей и счетчик посещений с авторизованной страницей статистики.
+Laravel 13 / PHP 8.3+ приложение для тестового задания PHP-разработчика. В проекте реализованы импорт шуток по расписанию, JSON API, подключаемый браузерный скрипт фильтрации полей, счетчик посещений и защищенная страница статистики.
 
 ## Стек
 
 - Laravel 13, PHP 8.3+
-- PostgreSQL и Redis через Laravel Sail
-- Vue 3 и Vite для страницы статистики
-- ECharts для интерактивных графиков
-- SQLite `:memory:` для быстрых автоматических тестов
+- PostgreSQL 18 и Redis через Laravel Sail
+- Vue 3, Vite 8 и ECharts 6 для страницы статистики
+- PHPUnit 12, SQLite `:memory:` для быстрых автоматических тестов
 
-## Архитектура
+## Структура
 
 Бизнес-логика отделена от Laravel-адаптеров:
 
-- `src/Domain`: сущности, DTO и порты.
-- `src/Application`: CQRS-команды, запросы и обработчики.
-- `src/Infrastructure`: API-клиенты, Eloquent-репозитории и адаптеры кеша.
+- `src/Domain`: сущности и порты доменной логики.
+- `src/Application`: команды, запросы и обработчики сценариев.
+- `src/Application/Persistence`: Criteria-объекты для репозиториев.
+- `src/Infrastructure`: API-клиенты, Eloquent-репозитории, model mapping и адаптер кеша.
 - `app/Http`: контроллеры и middleware.
+- `app/Models`: Eloquent-модели Laravel.
 - `app/Console`: Artisan-команды.
-- `app/Providers`: DI-привязки.
+- `app/Providers`: DI-привязки интерфейсов к реализациям.
+- `config/persistence.php`: маппинг persistence alias на Eloquent-модели.
+- `routes/web.php`: web-страницы `/` и `/stats`.
+- `routes/api.php`: JSON/CORS endpoints с префиксом `/api`.
+- `resources/js`: Vue dashboard и ECharts-компоненты.
+- `public/js`: подключаемые browser-only скрипты.
 
 Laravel-слой зависит от `src`, при этом application/domain код не зависит от контроллеров.
 
@@ -35,7 +41,7 @@ php artisan key:generate
 ./vendor/bin/sail npm run dev -- --host 0.0.0.0
 ```
 
-Стандартные порты сервисов:
+Стандартные порты сервисов задаются в `.env.example`:
 
 ```text
 Приложение: http://127.0.0.1
@@ -44,16 +50,43 @@ PostgreSQL: 127.0.0.1:5432
 Redis:      127.0.0.1:6379
 ```
 
-Доступ к странице статистики задается в `.env`:
+Для изменения портов используйте переменные:
+
+```dotenv
+APP_PORT=80
+VITE_PORT=5173
+FORWARD_DB_PORT=5432
+FORWARD_REDIS_PORT=6379
+```
+
+Доступ к странице статистики задается в `.env`. Авторизация для `/stats` использует JWT в HttpOnly cookie или Bearer token:
 
 ```dotenv
 STATS_LOGIN=admin
 STATS_PASSWORD=secret
+STATS_JWT_SECRET=
+STATS_JWT_TTL=3600
 ```
 
-## Обязательный импорт из API
+## Локальный запуск без Sail
 
-Консольная команда получает случайную шутку из Official Joke API и сохраняет ее в PostgreSQL:
+Подходит, если локально уже установлены PHP, Composer, Node.js, PostgreSQL и Redis.
+
+```bash
+composer install
+npm install
+cp .env.example .env
+php artisan key:generate
+php artisan migrate
+npm run dev
+php artisan serve
+```
+
+В этом режиме проверьте, что `DB_HOST`, `DB_PORT`, `REDIS_HOST` и `REDIS_PORT` указывают на локальные сервисы.
+
+## Импорт шуток
+
+Консольная команда получает случайную шутку из Official Joke API и сохраняет ее в таблицу `jokes`:
 
 ```bash
 ./vendor/bin/sail artisan jokes:fetch
@@ -71,12 +104,30 @@ Cron для production:
 * * * * * cd /path/to/project && php artisan schedule:run >> /dev/null 2>&1
 ```
 
-JSON-маршрут:
+JSON endpoint возвращает последние сохраненные шутки:
 
 ```text
 GET /api/jokes
 GET /api/jokes?limit=100
 ```
+
+Параметр `limit` ограничивается диапазоном `1..200`, значение по умолчанию - `50`.
+
+## Тестовые данные
+
+Сидер `Database\Seeders\VisitSeeder` создает тестовые просмотры за последние 24 часа для страницы статистики:
+
+```bash
+./vendor/bin/sail artisan db:seed --class=VisitSeeder
+```
+
+Общий сидер также подключает эти данные:
+
+```bash
+./vendor/bin/sail artisan db:seed
+```
+
+Сидер просмотров идемпотентен для своих данных: перед вставкой он удаляет только записи с fingerprint `seed-visitor-*`.
 
 ## Счетчик посещений
 
@@ -93,16 +144,28 @@ GET /api/jokes?limit=100
 
 ```text
 POST /api/visits
+OPTIONS /api/visits
 GET /stats
+GET /stats?hours=48
 ```
 
-`/stats` защищен HTTP Basic auth и рендерит Vue 3 dashboard:
+`POST /api/visits` возвращает `201` и JSON `{"ok": true}`. Для внешнего подключения скрипта endpoint отдает CORS-заголовки на `POST` и `OPTIONS`.
+
+`/stats` защищен JWT auth и рендерит Vue 3 dashboard. Для браузерного входа используется форма:
+
+```text
+GET /stats/login
+POST /stats/login
+POST /stats/logout
+```
 
 - уникальные посещения по часам;
 - распределение по городам;
 - сводные метрики: всего уникальных посещений, час пик и топ город.
 
-## Использование Redis
+Параметр `/stats?hours=` ограничивается диапазоном `1..168`, значение по умолчанию - `24`.
+
+## Redis cache
 
 Redis используется как Laravel cache store:
 
@@ -130,7 +193,7 @@ REDIS_HOST=redis
 ./vendor/bin/sail npm run build
 ```
 
-ECharts выбран вместо CDN-скрипта Chart.js, потому что дает более выразительные интерактивные графики, качественные tooltip, адаптивный canvas-rendering и нормальную сборку через Vite.
+ECharts выбран вместо CDN-скрипта Chart.js, потому что дает интерактивные графики, tooltip, адаптивный canvas-rendering и нормальную сборку через Vite.
 
 ## Скрипт фильтрации полей
 
@@ -159,6 +222,14 @@ public/js/type-field-filter.js
 ```bash
 ./vendor/bin/sail test
 ./vendor/bin/sail npm run build
+./vendor/bin/pint --dirty
+```
+
+Без Sail:
+
+```bash
+composer test
+npm run build
 ./vendor/bin/pint --dirty
 ```
 

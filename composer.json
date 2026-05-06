@@ -6,7 +6,7 @@
     "keywords": ["laravel", "framework"],
     "license": "MIT",
     "require": {
-        "php": "^8.3",
+        "php": "^8.5",
         "laravel/framework": "^13.7",
         "laravel/tinker": "^3.0"
     },
@@ -18,7 +18,9 @@
         "laravel/sail": "^1.58",
         "mockery/mockery": "^1.6",
         "nunomaduro/collision": "^8.6",
-        "phpunit/phpunit": "^12.5.12"
+        "phpstan/phpstan": "^1.12",
+        "phpunit/phpunit": "^12.5.12",
+        "vimeo/psalm": "^6.16"
     },
     "autoload": {
         "psr-4": {
@@ -51,6 +53,16 @@
         "test": [
             "@php artisan config:clear --ansi @no_additional_args",
             "@php artisan test"
+        ],
+        "stan": [
+            "phpstan analyse --memory-limit=1G"
+        ],
+        "psalm": [
+            "psalm --show-info=false"
+        ],
+        "analyse": [
+            "@stan",
+            "@psalm"
         ],
         "post-autoload-dump": [
             "Illuminate\\Foundation\\ComposerScripts::postAutoloadDump",
