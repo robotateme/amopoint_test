@@ -2,6 +2,37 @@
 
 Laravel 13 / PHP 8.5 приложение с импортом шуток по расписанию, JSON API, счетчиком посещений, JWT-защитой страницы статистики и Vue dashboard.
 
+## Сравнение с ТЗ
+
+| Пункт ТЗ | Статус | Где реализовано |
+|---|---:|---|
+| Laravel-проект | выполнено | Laravel 13 / PHP 8.5 |
+| Консольная команда получает данные из внешнего API | выполнено | `jokes:fetch`, Official Joke API |
+| Команда сохраняет данные в таблицу БД | выполнено | таблица `jokes`, репозиторий шуток |
+| Запуск каждые 5 минут | выполнено | `routes/console.php` |
+| Route отдает массив записей JSON | выполнено | `GET /api/jokes` |
+| JS-файл для страницы `testlist.html` | выполнено | `public/js/type-field-filter.js` |
+| Поля фильтруются по выбранному `Тип` и `name` | выполнено | нативный DOM API, без сторонних библиотек |
+| Счетчик посещений как подключаемый JS | выполнено | `public/js/visit-counter.js` |
+| JS собирает устройство | выполнено | `desktop`, `mobile`, `tablet` по user-agent |
+| IP и город | выполнено | JS отправляет визит, IP берется backend-ом из HTTP-запроса как доверенный источник, город определяется через `ip-api.com` |
+| Backend хранит посещения в БД | выполнено | таблица `visits` |
+| График уникальных посещений по часам | выполнено | `/stats`, Vue + ECharts |
+| Круговая диаграмма по городам | выполнено | `/stats`, Vue + ECharts |
+| Страница статистики с авторизацией | выполнено | `/stats/login`, JWT |
+| Выложить на хостинг | подготовлено | `Dockerfile`, `fly.toml`, GitHub Actions deploy workflow |
+
+## Дополнительно
+
+- Роуты разделены на `routes/api.php` и `routes/web.php`.
+- Сценарии приложения разделены по CQRS: `Command` и `Query`.
+- Eloquent-модели находятся в `app/Models`, доменный слой не зависит от Laravel-моделей.
+- Доменные value objects создаются явно в mapper-слое, Eloquent `casts()` не используются для доменной конвертации.
+- Репозитории используют Criteria для поиска, сортировки и лимитов.
+- `/stats/login` защищен Redis sliding-window rate limiting через Lua script resolver.
+- Статистика кешируется через Laravel cache с version-key invalidation.
+- Добавлены сиды просмотров, feature/integration tests, unit tests, PHPStan level 8, Psalm level 1, Makefile и GitHub CI.
+
 ## Быстрый старт
 
 ```bash
