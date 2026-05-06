@@ -29,7 +29,8 @@ final class EloquentCriteriaContextTest extends TestCase
             limit: 10,
         );
 
-        $query = (new EloquentCriteriaContext(JokeRecord::query()))->query($criteria);
+        $context = new EloquentCriteriaContext(JokeRecord::query());
+        $query = $context->query($criteria);
 
         self::assertSame(
             'select * from "jokes" where "type" = ? and "setup" like ? order by "id" desc limit 10',
@@ -45,7 +46,8 @@ final class EloquentCriteriaContextTest extends TestCase
             new Filter('type', FilterType::NOT_IN, ['programming']),
         ]);
 
-        $query = (new EloquentCriteriaContext(JokeRecord::query()))->query($criteria);
+        $context = new EloquentCriteriaContext(JokeRecord::query());
+        $query = $context->query($criteria);
 
         self::assertSame(
             'select * from "jokes" where "id" in (?, ?, ?) and "type" not in (?)',
@@ -63,6 +65,7 @@ final class EloquentCriteriaContextTest extends TestCase
         $this->expectException(InvalidArgumentException::class);
         $this->expectExceptionMessage('Filter value must be iterable for IN operators.');
 
-        (new EloquentCriteriaContext(JokeRecord::query()))->query($criteria);
+        $context = new EloquentCriteriaContext(JokeRecord::query());
+        $context->query($criteria);
     }
 }

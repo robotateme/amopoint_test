@@ -25,7 +25,7 @@ Use a layered architecture with explicit dependency direction:
 - `Infrastructure` implements ports and talks to HTTP clients, Redis and persistence.
 - `app` remains the Laravel delivery layer: controllers, middleware, providers and Eloquent models.
 
-Eloquent models live in `app/Models`. Infrastructure repositories do not import `App\Models` directly. They resolve model classes through `Infrastructure\Persistence\ModelResolver`, backed by `config/persistence.php`.
+Eloquent models live in `app/Models`. Infrastructure repositories do not import `App\Models` directly. Each repository owns its persistence mapping alias, resolves the configured model class from `config/persistence.php`, builds an Eloquent query inside the repository boundary and passes it to `EloquentCriteriaContext`.
 
 Eloquent casts are not used for domain conversion. Domain value objects are created explicitly in mapper classes. This keeps `Domain` free from Laravel cast contracts and framework date types.
 
@@ -51,7 +51,7 @@ Positive:
 Tradeoffs:
 
 - Some Laravel dynamic behavior needs narrow static-analysis suppressions at framework boundaries.
-- The model resolver adds indirection, but it avoids coupling Infrastructure to Laravel model namespaces.
+- Repository-local model mapping adds a small amount of repetition, but keeps Eloquent model types out of application contracts.
 - Static analysis scope excludes Laravel-generated DSL-heavy files where framework magic dominates signal.
 
 ## Validation

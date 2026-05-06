@@ -2,81 +2,142 @@
 
 namespace Infrastructure\Visit;
 
-use Application\Persistence\SearchCriteria\Units\FilterType;
-use Application\Persistence\SearchCriteria\Units\Order;
-use Application\Persistence\Units\Criteria;
-use Application\Persistence\Units\Filter;
-use Application\Persistence\Units\OrderType;
+use App\Models\VisitRecord;
+use Application\Persistence\SearchCriteria\Contracts\Criteria;
+use Application\Visit\VisitRepository;
 use Domain\Visit\Visit;
-use Domain\Visit\VisitRepository;
+use Illuminate\Database\Connection;
+use Illuminate\Database\Eloquent\Builder;
+use Illuminate\Database\MySqlConnection;
+use Illuminate\Database\PostgresConnection;
+use Illuminate\Database\SQLiteConnection;
 use Illuminate\Support\Facades\DB;
 use Infrastructure\Persistence\Mapping\VisitMapper;
-use Infrastructure\Persistence\ModelResolver;
-use Infrastructure\Persistence\SQL\QueryCriteriaContext;
+use Infrastructure\Persistence\SQL\EloquentCriteriaContext;
+use RuntimeException;
+use stdClass;
+use Webmozart\Assert\Assert;
 
-final class EloquentVisitRepository implements VisitRepository
+final readonly class EloquentVisitRepository implements VisitRepository
 {
-    public function __construct(
-        private readonly ModelResolver $models,
-    ) {}
-
     public function save(Visit $visit): void
     {
-        $modelClass = $this->models->classFor('visit');
-        $modelClass::query()->create(VisitMapper::attributesFromDomain($visit));
+        $this->query()->create(VisitMapper::attributesFromDomain($visit));
     }
 
-    public function uniqueByHour(int $hours = 24): array
+    public function uniqueByHour(Criteria $criteria): array
     {
-        $driver = DB::connection()->getDriverName();
-        $hourExpression = match ($driver) {
-            'sqlite' => "strftime('%Y-%m-%d %H:00', created_at)",
-            'pgsql' => "to_char(created_at, 'YYYY-MM-DD HH24:00')",
-            default => "date_format(created_at, '%Y-%m-%d %H:00')",
-        };
+        $query = $this->searchQuery($criteria);
 
-        $criteria = new Criteria(
-            filters: [
-                new Filter('created_at', FilterType::GREATER_OR_EQUAL, now()->subHours($hours)),
-            ],
-            orders: [
-                new Order('hour', OrderType::ASC),
-            ],
-        );
-
-        $query = (new QueryCriteriaContext(DB::table($this->models->tableFor('visit'))))
-            ->query($criteria);
-
-        return $query
-            ->selectRaw("{$hourExpression} as hour, count(distinct fingerprint) as visits")
+        $records = $query
+            ->selectRaw($this->hourExpression().' as hour, count(distinct fingerprint) as visits')
             ->groupBy('hour')
-            ->get()
-            ->map(fn ($row): array => [
-                'hour' => (string) $row->hour,
-                'visits' => (int) $row->visits,
-            ])
-            ->all();
+            ->orderBy('hour')
+            ->get();
+
+        $rows = [];
+
+        foreach ($records as $record) {
+            $rows[] = [
+                'hour' => $this->stringField($record, 'hour'),
+                'visits' => $this->intField($record),
+            ];
+        }
+
+        return $rows;
     }
 
-    public function uniqueByCity(): array
+    public function uniqueByCity(Criteria $criteria): array
     {
-        $criteria = new Criteria(
-            orders: [
-                new Order('visits', OrderType::DESC),
-            ],
-        );
-
-        $query = (new QueryCriteriaContext(DB::table($this->models->tableFor('visit'))))
-            ->query($criteria);
-
-        return $query
+        $records = $this->searchQuery($criteria)
             ->selectRaw('city, count(distinct fingerprint) as visits')
             ->groupBy('city')
-            ->get()
-            ->map(fn ($row): array => [
-                'city' => (string) $row->city,
-                'visits' => (int) $row->visits,
-            ])
-            ->all();
+            ->orderByDesc('visits')
+            ->orderBy('city')
+            ->get();
+
+        $rows = [];
+
+        foreach ($records as $record) {
+            $rows[] = [
+                'city' => $this->stringField($record, 'city'),
+                'visits' => $this->intField($record),
+            ];
+        }
+
+        return $rows;
+    }
+
+    /**
+     * @return Builder<VisitRecord>
+     */
+    private function query(): Builder
+    {
+        return VisitRecord::query();
+    }
+
+    /**
+     * Aggregate methods intentionally apply only search constraints from Criteria.
+     * Grouping, projection and ordering belong to the aggregate itself.
+     *
+     * @return Builder<VisitRecord>
+     */
+    private function searchQuery(Criteria $criteria): Builder
+    {
+        return new EloquentCriteriaContext($this->query())->search($criteria);
+    }
+
+    /**
+     * @return literal-string
+     */
+    private function hourExpression(): string
+    {
+        $connection = $this->connection();
+
+        return match (true) {
+            $connection instanceof SQLiteConnection => "strftime('%Y-%m-%d %H:00', created_at)",
+            $connection instanceof PostgresConnection => "to_char(created_at, 'YYYY-MM-DD HH24:00')",
+            $connection instanceof MySqlConnection => "date_format(created_at, '%Y-%m-%d %H:00')",
+            default => throw new RuntimeException(sprintf(
+                'Unsupported visit statistics database connection [%s].',
+                $connection::class,
+            )),
+        };
+    }
+
+    private function connection(): Connection
+    {
+        return DB::connection();
+    }
+
+    private function stringField(stdClass|VisitRecord $record, string $field): string
+    {
+        $value = $this->field($record, $field);
+
+        Assert::scalar($value, "Visit statistics field [$field] must be scalar.");
+
+        return (string) $value;
+    }
+
+    private function intField(stdClass|VisitRecord $record): int
+    {
+        $value = $this->field($record, 'visits');
+
+        Assert::numeric($value, "Visit statistics field [visits] must be numeric.");
+
+        return (int) $value;
+    }
+
+    private function field(stdClass|VisitRecord $record, string $field): mixed
+    {
+        if ($record instanceof VisitRecord) {
+            Assert::keyExists($record->getAttributes(), $field, "Visit statistics field [$field] is missing.");
+
+            return $record->getAttribute($field);
+        }
+
+        Assert::propertyExists($record, $field, "Visit statistics field [$field] is missing.");
+
+        return $record->{$field};
     }
 }

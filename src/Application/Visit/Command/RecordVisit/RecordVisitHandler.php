@@ -2,9 +2,9 @@
 
 namespace Application\Visit\Command\RecordVisit;
 
+use Application\Visit\VisitRepository;
 use Domain\Visit\CityResolver;
 use Domain\Visit\Visit;
-use Domain\Visit\VisitRepository;
 use Domain\Visit\VisitStatisticsCache;
 
 final readonly class RecordVisitHandler
@@ -35,6 +35,8 @@ final readonly class RecordVisitHandler
             userAgent: $command->userAgent,
             pageUrl: $command->pageUrl,
             referrer: $command->referrer,
+            createdAt: null,
+            updatedAt: null,
         ));
 
         $this->cache->flush();

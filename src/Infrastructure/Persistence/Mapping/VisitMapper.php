@@ -14,13 +14,15 @@ final readonly class VisitMapper
     public static function attributesFromDomain(Visit $visit): array
     {
         return [
-            'fingerprint' => $visit->fingerprint,
-            'ip' => $visit->ip,
-            'city' => $visit->city,
-            'device' => $visit->device,
-            'user_agent' => $visit->userAgent,
-            'page_url' => $visit->pageUrl,
-            'referrer' => $visit->referrer,
+            'fingerprint' => $visit->getFingerprint(),
+            'ip' => $visit->getIp(),
+            'city' => $visit->getCity(),
+            'device' => $visit->getDevice(),
+            'user_agent' => $visit->getUserAgent(),
+            'page_url' => $visit->getPageUrl(),
+            'referrer' => $visit->getReferrer(),
+            'created_at' => $visit->getCreatedAt(),
+            'updated_at' => $visit->getUpdatedAt(),
         ];
     }
 }

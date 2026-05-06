@@ -15,13 +15,13 @@ use Traversable;
 /**
  * @template TModel of Model
  */
-final class EloquentCriteriaContext
+final readonly class EloquentCriteriaContext
 {
     /**
      * @param  Builder<TModel>  $queryBuilder
      */
     public function __construct(
-        private readonly Builder $queryBuilder,
+        private Builder $queryBuilder,
     ) {}
 
     /**
@@ -31,6 +31,17 @@ final class EloquentCriteriaContext
     {
         $this->applyFilters($criteria);
         $this->applyOrdering($criteria);
+        $this->applyLimit($criteria);
+
+        return $this->queryBuilder;
+    }
+
+    /**
+     * @return Builder<TModel>
+     */
+    public function search(Criteria $criteria): Builder
+    {
+        $this->applyFilters($criteria);
         $this->applyLimit($criteria);
 
         return $this->queryBuilder;
