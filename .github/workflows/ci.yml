@@ -24,6 +24,7 @@ jobs:
         with:
           php-version: '8.5'
           coverage: none
+          extensions: redis
           tools: composer:v2
 
       - name: Cache Composer dependencies
@@ -55,7 +56,7 @@ jobs:
         with:
           php-version: '8.5'
           coverage: none
-          extensions: mbstring, sqlite3, pdo_sqlite
+          extensions: mbstring, redis, sqlite3, pdo_sqlite
           tools: composer:v2
 
       - name: Cache Composer dependencies
@@ -98,7 +99,7 @@ jobs:
         with:
           php-version: '8.5'
           coverage: none
-          extensions: mbstring, sqlite3, pdo_sqlite
+          extensions: mbstring, redis, sqlite3, pdo_sqlite
           tools: composer:v2
 
       - name: Cache Composer dependencies
