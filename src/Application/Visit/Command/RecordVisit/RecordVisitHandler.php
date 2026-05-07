@@ -5,6 +5,7 @@ namespace Application\Visit\Command\RecordVisit;
 use Application\Visit\VisitRepository;
 use Domain\Visit\CityResolver;
 use Domain\Visit\Visit;
+use Domain\Visit\VisitStatisticsBroadcaster;
 use Domain\Visit\VisitStatisticsCache;
 
 final readonly class RecordVisitHandler
@@ -13,6 +14,7 @@ final readonly class RecordVisitHandler
         private CityResolver $cityResolver,
         private VisitRepository $visits,
         private VisitStatisticsCache $cache,
+        private VisitStatisticsBroadcaster $broadcaster,
     ) {}
 
     public function handle(RecordVisitCommand $command): void
@@ -40,5 +42,6 @@ final readonly class RecordVisitHandler
         ));
 
         $this->cache->flush();
+        $this->broadcaster->changed();
     }
 }

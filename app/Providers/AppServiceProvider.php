@@ -7,6 +7,7 @@ use Application\Auth\LoginRateLimiter;
 use Application\Auth\StatsCredentials;
 use Domain\Joke\JokeProvider;
 use Domain\Visit\CityResolver;
+use Domain\Visit\VisitStatisticsBroadcaster;
 use Domain\Visit\VisitStatisticsCache;
 use Illuminate\Contracts\Config\Repository as ConfigRepository;
 use Illuminate\Contracts\Foundation\Application as FoundationApplication;
@@ -21,6 +22,7 @@ use Infrastructure\Redis\LuaScriptResolver;
 use Infrastructure\Redis\PhpRedisConnection;
 use Infrastructure\Redis\RedisConnectionPort;
 use Infrastructure\Visit\IpApiCityResolver;
+use Infrastructure\Visit\SocketIoVisitStatisticsBroadcaster;
 use InvalidArgumentException;
 
 class AppServiceProvider extends ServiceProvider
@@ -33,6 +35,19 @@ class AppServiceProvider extends ServiceProvider
         $this->app->bind(JokeProvider::class, OfficialJokeApiClient::class);
         $this->app->bind(CityResolver::class, IpApiCityResolver::class);
         $this->app->bind(VisitStatisticsCache::class, LaravelVisitStatisticsCache::class);
+        $this->app->singleton(
+            VisitStatisticsBroadcaster::class,
+            function (FoundationApplication $app): VisitStatisticsBroadcaster {
+                $endpoint = $app->environment() === 'testing'
+                    ? ''
+                    : (string) config('services.socket_io.server_url', '');
+
+                return new SocketIoVisitStatisticsBroadcaster(
+                    $endpoint,
+                    (string) config('services.socket_io.internal_token', ''),
+                );
+            },
+        );
         $this->app->bind(JwtTokenService::class, HmacJwtTokenService::class);
         $this->app->bind(StatsCredentials::class, LaravelStatsCredentials::class);
         $this->bindPersistenceRepositories();

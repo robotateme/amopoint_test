@@ -7,11 +7,19 @@
     @vite(['resources/css/app.css', 'resources/js/app.js'])
 </head>
 <body class="stats-body">
+@php
+    $socketIo = [
+        'enabled' => (bool) config('services.socket_io.enabled'),
+        'url' => config('services.socket_io.client_url'),
+        'path' => '/socket.io',
+    ];
+@endphp
 <script>
     window.__VISIT_STATS__ = @json([
         'stats' => $stats,
         'hours' => $hours,
     ]);
+    window.__SOCKET_IO__ = @json($socketIo);
 </script>
 <div id="stats-app" data-page-title="Статистика посещений"></div>
 </body>

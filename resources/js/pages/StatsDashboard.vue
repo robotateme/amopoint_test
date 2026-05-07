@@ -107,6 +107,7 @@
 
 <script setup>
 import { computed, onBeforeUnmount, onMounted, ref } from 'vue';
+import { io } from 'socket.io-client';
 import EChartPanel from '../components/EChartPanel.vue';
 
 const payload = window.__VISIT_STATS__ || { stats: { total: 0, hours: [], cities: [] }, hours: 24 };
@@ -115,6 +116,7 @@ const total = ref(Number(payload.stats?.total || 0));
 const hourRows = ref(payload.stats?.hours || []);
 const cityRows = ref(payload.stats?.cities || []);
 let refreshTimer = null;
+let statsSocket = null;
 
 const palette = ['#6ce5cf', '#ffd166', '#78f0d6', '#3e90ff', '#ff8f70', '#8f7dff', '#5ae6ff'];
 
@@ -155,10 +157,11 @@ async function refreshStats() {
 
 onMounted(() => {
     requestStatsRefresh();
+    connectStatsSocket();
 
     refreshTimer = window.setInterval(() => {
         requestStatsRefresh();
-    }, 2000);
+    }, 30000);
 
     window.addEventListener('focus', requestStatsRefresh);
     window.addEventListener('storage', refreshStatsAfterVisitRecord);
@@ -167,6 +170,7 @@ onMounted(() => {
 
 onBeforeUnmount(() => {
     window.clearInterval(refreshTimer);
+    statsSocket?.disconnect();
     window.removeEventListener('focus', requestStatsRefresh);
     window.removeEventListener('storage', refreshStatsAfterVisitRecord);
     document.removeEventListener('visibilitychange', refreshStatsWhenVisible);
@@ -174,6 +178,21 @@ onBeforeUnmount(() => {
 
 function requestStatsRefresh() {
     refreshStats().catch(() => {});
+}
+
+function connectStatsSocket() {
+    const socketConfig = window.__SOCKET_IO__ || {};
+
+    if (socketConfig.enabled !== true) {
+        return;
+    }
+
+    statsSocket = io(socketConfig.url || undefined, {
+        path: socketConfig.path || '/socket.io',
+        transports: ['websocket', 'polling'],
+    });
+
+    statsSocket.on('visit-statistics:changed', requestStatsRefresh);
 }
 
 function refreshStatsWhenVisible() {

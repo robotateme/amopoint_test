@@ -48,4 +48,11 @@ return [
         ],
     ],
 
+    'socket_io' => [
+        'enabled' => env('SOCKET_IO_ENABLED', false),
+        'client_url' => env('SOCKET_IO_CLIENT_URL'),
+        'server_url' => env('SOCKET_IO_SERVER_URL', 'http://127.0.0.1:6001'),
+        'internal_token' => env('SOCKET_IO_INTERNAL_TOKEN'),
+    ],
+
 ];

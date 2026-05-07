@@ -4,7 +4,8 @@
     "type": "module",
     "scripts": {
         "build": "vite build",
-        "dev": "vite"
+        "dev": "vite",
+        "socket": "node socket-server.js"
     },
     "devDependencies": {
         "@tailwindcss/vite": "^4.0.0",
@@ -16,6 +17,8 @@
     },
     "dependencies": {
         "echarts": "^6.0.0",
+        "socket.io": "^4.8.3",
+        "socket.io-client": "^4.8.3",
         "vue": "^3.5.33"
     }
 }

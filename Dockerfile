@@ -32,7 +32,7 @@ RUN composer install --no-dev --no-interaction --prefer-dist --optimize-autoload
 FROM php:8.5-fpm-bookworm
 
 RUN apt-get update \
-    && apt-get install -y --no-install-recommends nginx supervisor libpq-dev libsqlite3-dev $PHPIZE_DEPS \
+    && apt-get install -y --no-install-recommends nginx nodejs npm supervisor libpq-dev libsqlite3-dev $PHPIZE_DEPS \
     && pecl install redis \
     && docker-php-ext-enable redis \
     && docker-php-ext-install bcmath pdo_pgsql pdo_sqlite \
@@ -43,6 +43,8 @@ WORKDIR /var/www/html
 
 COPY --from=vendor /var/www/html/vendor ./vendor
 COPY --from=frontend /app/public/build ./public/build
+COPY package.json package-lock.json ./
+RUN npm ci --omit=dev --ignore-scripts
 COPY . .
 
 RUN find bootstrap/cache -type f ! -name .gitignore -delete \
