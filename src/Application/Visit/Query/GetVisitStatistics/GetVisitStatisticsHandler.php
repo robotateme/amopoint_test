@@ -16,7 +16,7 @@ final readonly class GetVisitStatisticsHandler
     ) {}
 
     /**
-     * @return array{hours: array<int, array{hour: string, visits: int}>, cities: array<int, array{city: string, visits: int}>}
+     * @return array{total: int, hours: array<int, array{hour: string, visits: int}>, cities: array<int, array{city: string, visits: int}>}
      */
     public function handle(GetVisitStatisticsQuery $query): array
     {
@@ -28,6 +28,7 @@ final readonly class GetVisitStatisticsHandler
             );
 
             return [
+                'total' => $this->visits->uniqueTotal($hourCriteria),
                 'hours' => $this->visits->uniqueByHour($hourCriteria),
                 'cities' => $this->visits->uniqueByCity($hourCriteria),
             ];

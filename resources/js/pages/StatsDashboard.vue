@@ -109,15 +109,16 @@
 import { computed, onBeforeUnmount, onMounted, ref } from 'vue';
 import EChartPanel from '../components/EChartPanel.vue';
 
-const payload = window.__VISIT_STATS__ || { stats: { hours: [], cities: [] }, hours: 24 };
+const payload = window.__VISIT_STATS__ || { stats: { total: 0, hours: [], cities: [] }, hours: 24 };
 const hours = payload.hours || 24;
+const total = ref(Number(payload.stats?.total || 0));
 const hourRows = ref(payload.stats?.hours || []);
 const cityRows = ref(payload.stats?.cities || []);
 let refreshTimer = null;
 
 const palette = ['#6ce5cf', '#ffd166', '#78f0d6', '#3e90ff', '#ff8f70', '#8f7dff', '#5ae6ff'];
 
-const totalVisits = computed(() => cityRows.value.reduce((sum, row) => sum + Number(row.visits || 0), 0));
+const totalVisits = computed(() => total.value);
 
 const topCity = computed(() => cityRows.value[0]?.city || 'Нет данных');
 
@@ -147,19 +148,45 @@ async function refreshStats() {
 
     const freshPayload = await response.json();
 
+    total.value = Number(freshPayload.stats?.total || 0);
     hourRows.value = freshPayload.stats?.hours || [];
     cityRows.value = freshPayload.stats?.cities || [];
 }
 
 onMounted(() => {
+    requestStatsRefresh();
+
     refreshTimer = window.setInterval(() => {
-        refreshStats().catch(() => {});
-    }, 5000);
+        requestStatsRefresh();
+    }, 2000);
+
+    window.addEventListener('focus', requestStatsRefresh);
+    window.addEventListener('storage', refreshStatsAfterVisitRecord);
+    document.addEventListener('visibilitychange', refreshStatsWhenVisible);
 });
 
 onBeforeUnmount(() => {
     window.clearInterval(refreshTimer);
+    window.removeEventListener('focus', requestStatsRefresh);
+    window.removeEventListener('storage', refreshStatsAfterVisitRecord);
+    document.removeEventListener('visibilitychange', refreshStatsWhenVisible);
 });
+
+function requestStatsRefresh() {
+    refreshStats().catch(() => {});
+}
+
+function refreshStatsWhenVisible() {
+    if (document.visibilityState === 'visible') {
+        requestStatsRefresh();
+    }
+}
+
+function refreshStatsAfterVisitRecord(event) {
+    if (event.key === 'amopoint_visit_recorded_at') {
+        requestStatsRefresh();
+    }
+}
 
 const hourChartOption = computed(() => ({
     color: ['#6ce5cf'],

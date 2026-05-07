@@ -202,10 +202,51 @@ final class StatsAuthAndCacheTest extends TestCase
         ], $payload['stats']['cities']);
     }
 
+    public function test_stats_total_counts_unique_visitors_globally(): void
+    {
+        VisitRecord::query()->insert([
+            [
+                'fingerprint' => 'travelling-visitor',
+                'ip' => '198.51.100.10',
+                'city' => 'Alpha',
+                'device' => 'desktop',
+                'user_agent' => 'Test Agent',
+                'page_url' => 'https://example.test/alpha',
+                'referrer' => 'https://example.test/',
+                'created_at' => now()->subMinutes(20),
+                'updated_at' => now()->subMinutes(20),
+            ],
+            [
+                'fingerprint' => 'travelling-visitor',
+                'ip' => '198.51.100.20',
+                'city' => 'Beta',
+                'device' => 'desktop',
+                'user_agent' => 'Test Agent',
+                'page_url' => 'https://example.test/beta',
+                'referrer' => 'https://example.test/alpha',
+                'created_at' => now()->subMinutes(10),
+                'updated_at' => now()->subMinutes(10),
+            ],
+        ]);
+
+        $token = $this->app->make(JwtTokenService::class)->issue('admin');
+
+        $payload = $this->statsPayload(
+            $this->withHeader('Authorization', "Bearer {$token}")->get('/stats?hours=1')
+        );
+
+        $this->assertSame(1, $payload['stats']['total']);
+        $this->assertSame([
+            ['city' => 'Alpha', 'visits' => 1],
+            ['city' => 'Beta', 'visits' => 1],
+        ], $payload['stats']['cities']);
+    }
+
     /**
      * @param  TestResponse<Response>  $response
      * @return array{
      *     stats: array{
+     *         total: int,
      *         hours: array<int, array{hour: string, visits: int}>,
      *         cities: array<int, array{city: string, visits: int}>
      *     },
@@ -234,6 +275,7 @@ final class StatsAuthAndCacheTest extends TestCase
 
         /** @var array{
          *     stats: array{
+         *         total: int,
          *         hours: array<int, array{hour: string, visits: int}>,
          *         cities: array<int, array{city: string, visits: int}>
          *     },

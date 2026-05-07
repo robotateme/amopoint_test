@@ -54,6 +54,10 @@
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify(payload),
             keepalive: true
+        }).then(function (response) {
+            if (response.ok) {
+                localStorage.setItem('amopoint_visit_recorded_at', String(Date.now()));
+            }
         }).catch(function () {});
     }
 

@@ -83,6 +83,7 @@ final class ApplicationEndpointsTest extends TestCase
             ->assertJsonStructure([
                 'hours',
                 'stats' => [
+                    'total',
                     'hours',
                     'cities',
                 ],

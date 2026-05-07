@@ -25,6 +25,11 @@ final readonly class EloquentVisitRepository implements VisitRepository
         $this->query()->create(VisitMapper::attributesFromDomain($visit));
     }
 
+    public function uniqueTotal(Criteria $criteria): int
+    {
+        return $this->searchQuery($criteria)->distinct('fingerprint')->count('fingerprint');
+    }
+
     public function uniqueByHour(Criteria $criteria): array
     {
         $query = $this->searchQuery($criteria);

@@ -11,6 +11,8 @@ interface VisitRepository
 {
     public function save(Visit $visit): void;
 
+    public function uniqueTotal(Criteria $criteria): int;
+
     /**
      * @return array<int, array{hour: string, visits: int}>
      */
