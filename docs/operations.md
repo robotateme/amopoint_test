@@ -41,6 +41,43 @@ make build
 make quality
 ```
 
+## k6 smoke test статистики
+
+Black-box сценарий `tests/k6/stats.js` проверяет полный поток статистики:
+
+- открывает `/stats/login` и забирает CSRF token;
+- логинится в статистику;
+- читает baseline JSON `/stats?hours=1`;
+- отправляет несколько уникальных визитов в `POST /api/visits`;
+- повторно читает статистику и проверяет рост `stats.total`, наличие hourly rows и city rows.
+
+Сценарий запускается в изолированном Docker-контейнере `grafana/k6`; локальная установка k6 не нужна.
+
+Через Makefile:
+
+```bash
+K6_BASE_URL=http://127.0.0.1 \
+STATS_LOGIN=admin \
+STATS_PASSWORD=secret \
+K6_VISIT_COUNT=3 \
+make k6-stats
+```
+
+Предупреждение: сценарий пишет synthetic visits в `/api/visits` выбранного окружения. Используйте test/staging базу, если тестовые визиты не должны попасть в production.
+
+Переменные:
+
+```text
+K6_IMAGE        Docker image k6, по умолчанию grafana/k6:1.3.0
+K6_BASE_URL     адрес приложения, по умолчанию http://127.0.0.1
+STATS_LOGIN     логин страницы статистики, по умолчанию admin
+STATS_PASSWORD  пароль страницы статистики, по умолчанию secret
+K6_VISIT_COUNT  количество уникальных визитов, по умолчанию 3
+STATS_HOURS     окно статистики, по умолчанию 1
+```
+
+Сценарий рассчитан на smoke/regression проверку корректности агрегатов, а не на нагрузочный тест.
+
 В CI используется GitHub Actions workflow:
 
 - `.github/workflows/ci.yml`

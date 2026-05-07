@@ -20,9 +20,9 @@ Laravel 13 / PHP 8.5 приложение с импортом шуток по р
 | График уникальных посещений по часам | выполнено | `/stats`, Vue + ECharts |
 | Круговая диаграмма по городам | выполнено | `/stats`, Vue + ECharts |
 | Страница статистики с авторизацией | выполнено | `/stats/login`, JWT |
-| Выложить на хостинг | выполнено | Fly.io: <https://amopoint-test.fly.dev/>. Деплой оплачен free-credit периодом Fly.io, доступен 6 дней |
+| Выложить на хостинг | подготовлено | Docker/Fly.io конфиг и Laravel Cloud deploy hook workflow. Фактический деплой требует активный hosting account и secrets |
 
-Примечание по деплою: на free-credit окружении Fly.io машины приложения и PostgreSQL могут останавливаться при простое. Первый запрос после холодного старта может кратко получить ошибку соединения с БД; повторный запрос проходит после запуска PostgreSQL.
+Примечание по деплою: Fly.io деплой был заблокирован завершенным trial аккаунта. Для Laravel Cloud подготовлены [инструкции](docs/laravel-cloud.md) и GitHub deploy hook workflow.
 
 ## Уникальность посещений
 
@@ -43,7 +43,8 @@ Laravel 13 / PHP 8.5 приложение с импортом шуток по р
 - Репозитории используют Criteria для поиска, сортировки и лимитов.
 - `/stats/login` защищен Redis sliding-window rate limiting через Lua script resolver.
 - Статистика кешируется через Laravel cache с version-key invalidation.
-- Добавлены сиды просмотров, feature/integration tests, unit tests, PHPStan level 8, Psalm level 1, Makefile и GitHub CI.
+- Для Docker/nginx окружения добавлен Socket.IO broadcaster статистики; по умолчанию `SOCKET_IO_ENABLED=false`, чтобы Laravel Cloud работал через polling fallback.
+- Добавлены сиды просмотров, feature/integration tests, unit tests, k6 smoke test статистики, PHPStan level 8, Psalm level 1, Makefile и GitHub CI.
 
 ## Быстрый старт
 
@@ -65,10 +66,29 @@ make seed
 make help
 make up
 make test
+make k6-stats
 make quality
 ```
 
+## k6 smoke test статистики
+
+k6 не ставится в проект и не требуется локально: сценарий запускается из изолированного Docker-контейнера `grafana/k6`.
+
+```bash
+K6_BASE_URL=http://127.0.0.1 \
+STATS_LOGIN=admin \
+STATS_PASSWORD=secret \
+K6_VISIT_COUNT=3 \
+make k6-stats
+```
+
+Предупреждение: сценарий пишет synthetic visits в `/api/visits` выбранного окружения и проверяет рост `/stats?hours=1`. Запускайте его на test/staging базе, если не хотите добавлять тестовые визиты в production.
+
+Сценарий является smoke/regression проверкой корректности агрегатов, а не нагрузочным тестом.
+
 В репозитории настроен GitHub Actions workflow `CI`, который на `push` в `main` и на `pull_request` прогоняет `make RUNTIME=local quality`.
+
+Для Laravel Cloud автодеплоя есть workflow `.github/workflows/laravel-cloud-deploy.yml`. Ему нужен repository secret `LARAVEL_CLOUD_DEPLOY_HOOK`.
 
 `Makefile` автоматически выбирает режим:
 
@@ -89,6 +109,7 @@ make RUNTIME=sail quality
 - [API и сценарии использования](docs/api.md)
 - [Архитектура проекта](docs/architecture.md)
 - [Деплой на Fly.io](docs/deploy.md)
+- [Деплой на Laravel Cloud](docs/laravel-cloud.md)
 - [Эксплуатация и quality gates](docs/operations.md)
 - [RFC: Architecture and Quality Gates](docs/rfc/0001-architecture-and-quality-gates.md)
 

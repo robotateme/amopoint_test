@@ -1,6 +1,9 @@
 DEFAULT_GOAL := help
 
 SAIL ?= ./vendor/bin/sail
+K6_IMAGE ?= grafana/k6:1.3.0
+K6_BASE_URL ?= http://127.0.0.1
+K6_VISIT_COUNT ?= 3
 HAS_SAIL := $(shell test -x "$(SAIL)" && echo 1 || echo 0)
 DOCKER_OK := $(shell docker info >/dev/null 2>&1 && echo 1 || echo 0)
 RUNTIME ?= auto
@@ -33,7 +36,7 @@ YELLOW := \033[33m
 MAGENTA := \033[35m
 RESET := \033[0m
 
-.PHONY: help check-php setup install up down restart shell logs migrate fresh seed test stan psalm analyse format format-check build quality routes
+.PHONY: help check-php setup install up down restart shell logs migrate fresh seed test k6-stats stan psalm analyse format format-check build quality routes
 
 help: ## Показать список команд
 	@printf '\n$(CYAN)Amopoint Test$(RESET)\n'
@@ -111,6 +114,21 @@ seed: check-php ## Запустить сидеры
 
 test: check-php ## Запустить PHPUnit
 	APP_ENV=testing DB_CONNECTION=sqlite DB_DATABASE=:memory: DB_URL= CACHE_STORE=array SESSION_DRIVER=array QUEUE_CONNECTION=sync $(ARTISAN) test
+
+k6-stats: ## Запустить k6-сценарий проверки статистики
+	@if ! docker info >/dev/null 2>&1; then \
+		printf '$(YELLOW)Docker is required for k6-stats because k6 runs in an isolated container.$(RESET)\n'; \
+		exit 1; \
+	fi
+	@printf '$(YELLOW)Warning: k6-stats writes synthetic visits to BASE_URL=%s. Use a test/staging database unless this is intentional.$(RESET)\n' "$(K6_BASE_URL)"
+	docker run --rm --network host \
+		-v "$(CURDIR)/tests/k6:/scripts:ro" \
+		-e BASE_URL="$(K6_BASE_URL)" \
+		-e STATS_LOGIN="$(STATS_LOGIN)" \
+		-e STATS_PASSWORD="$(STATS_PASSWORD)" \
+		-e VISIT_COUNT="$(K6_VISIT_COUNT)" \
+		-e STATS_HOURS="$(STATS_HOURS)" \
+		$(K6_IMAGE) run /scripts/stats.js
 
 stan: check-php ## Запустить PHPStan level 8
 	$(PHP) vendor/bin/phpstan analyse --memory-limit=1G

@@ -21,6 +21,7 @@
 /storage/*.key
 /storage/pail
 /vendor
+/tmp/k6
 agents.md
 _ide_helper.php
 Homestead.json
