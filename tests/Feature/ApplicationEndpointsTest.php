@@ -51,6 +51,13 @@ final class ApplicationEndpointsTest extends TestCase
         ]);
     }
 
+    public function test_home_page_loads_visit_counter_script(): void
+    {
+        $this->get('/')
+            ->assertOk()
+            ->assertSee('/js/visit-counter.js', false);
+    }
+
     public function test_stats_page_requires_jwt_auth(): void
     {
         $this->get('/stats')->assertRedirect('/stats/login');
@@ -62,6 +69,25 @@ final class ApplicationEndpointsTest extends TestCase
             ->assertOk()
             ->assertSee('id="stats-app"', false)
             ->assertSee('__VISIT_STATS__');
+    }
+
+    public function test_stats_endpoint_returns_json_for_dashboard_refresh(): void
+    {
+        $token = $this->app->make(JwtTokenService::class)->issue('admin');
+
+        $this->withHeaders([
+            'Accept' => 'application/json',
+            'Authorization' => "Bearer {$token}",
+        ])->get('/stats?hours=1')
+            ->assertOk()
+            ->assertJsonStructure([
+                'hours',
+                'stats' => [
+                    'hours',
+                    'cities',
+                ],
+            ])
+            ->assertJsonPath('hours', 1);
     }
 
     public function test_stats_login_issues_jwt_cookie(): void

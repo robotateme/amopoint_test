@@ -219,5 +219,6 @@
         @if (Route::has('login'))
             <div class="h-14.5 hidden lg:block"></div>
         @endif
+        <script src="{{ asset('js/visit-counter.js') }}" defer></script>
     </body>
 </html>

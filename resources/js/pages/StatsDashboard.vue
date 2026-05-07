@@ -106,32 +106,59 @@
 </template>
 
 <script setup>
-import { computed } from 'vue';
+import { computed, onBeforeUnmount, onMounted, ref } from 'vue';
 import EChartPanel from '../components/EChartPanel.vue';
 
 const payload = window.__VISIT_STATS__ || { stats: { hours: [], cities: [] }, hours: 24 };
 const hours = payload.hours || 24;
-const hourRows = payload.stats?.hours || [];
-const cityRows = payload.stats?.cities || [];
+const hourRows = ref(payload.stats?.hours || []);
+const cityRows = ref(payload.stats?.cities || []);
+let refreshTimer = null;
 
 const palette = ['#6ce5cf', '#ffd166', '#78f0d6', '#3e90ff', '#ff8f70', '#8f7dff', '#5ae6ff'];
 
-const totalVisits = computed(() => cityRows.reduce((sum, row) => sum + Number(row.visits || 0), 0));
+const totalVisits = computed(() => cityRows.value.reduce((sum, row) => sum + Number(row.visits || 0), 0));
 
-const topCity = computed(() => cityRows[0]?.city || 'Нет данных');
+const topCity = computed(() => cityRows.value[0]?.city || 'Нет данных');
 
 const peakHour = computed(() => {
-    const row = [...hourRows].sort((left, right) => Number(right.visits) - Number(left.visits))[0];
+    const row = [...hourRows.value].sort((left, right) => Number(right.visits) - Number(left.visits))[0];
 
     return row ? row.hour.slice(11, 16) : 'Нет данных';
 });
 
 const averageByHour = computed(() => {
-    if (hourRows.length === 0) {
+    if (hourRows.value.length === 0) {
         return 0;
     }
 
-    return Math.round(totalVisits.value / hourRows.length);
+    return Math.round(totalVisits.value / hourRows.value.length);
+});
+
+async function refreshStats() {
+    const response = await fetch(`${window.location.pathname}?hours=${hours}`, {
+        headers: { Accept: 'application/json' },
+        credentials: 'same-origin',
+    });
+
+    if (!response.ok) {
+        return;
+    }
+
+    const freshPayload = await response.json();
+
+    hourRows.value = freshPayload.stats?.hours || [];
+    cityRows.value = freshPayload.stats?.cities || [];
+}
+
+onMounted(() => {
+    refreshTimer = window.setInterval(() => {
+        refreshStats().catch(() => {});
+    }, 5000);
+});
+
+onBeforeUnmount(() => {
+    window.clearInterval(refreshTimer);
 });
 
 const hourChartOption = computed(() => ({
@@ -159,7 +186,7 @@ const hourChartOption = computed(() => ({
     },
     yAxis: {
         type: 'category',
-        data: hourRows.map((row) => row.hour),
+        data: hourRows.value.map((row) => row.hour),
         axisLine: { show: false },
         axisTick: { show: false },
         axisLabel: { color: '#cbe1dd' },
@@ -167,7 +194,7 @@ const hourChartOption = computed(() => ({
     series: [{
         name: 'Уникальные посещения',
         type: 'bar',
-        data: hourRows.map((row) => row.visits),
+        data: hourRows.value.map((row) => row.visits),
         barWidth: 18,
         itemStyle: {
             borderRadius: [0, 4, 4, 0],
@@ -221,7 +248,7 @@ const cityChartOption = computed(() => ({
             color: '#d6fff7',
             formatter: '{b}: {c}',
         },
-        data: cityRows.map((row) => ({
+        data: cityRows.value.map((row) => ({
             name: row.city,
             value: row.visits,
         })),
