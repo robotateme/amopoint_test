@@ -11,6 +11,8 @@ REDIS_HOST=redis
 
 Статистика посещений кешируется на одну минуту. При записи нового визита повышается version key, поэтому агрегаты инвалидируются без очистки всего кеша.
 
+Dashboard обновляет статистику сразу после монтирования, затем раз в 2 секунды, при возврате фокуса вкладки и при событии `storage` от `visit-counter.js`. После успешного `POST /api/visits` счетчик пишет `amopoint_visit_recorded_at` в `localStorage`, чтобы открытая вкладка `/stats` могла сразу запросить свежие агрегаты.
+
 Redis также используется для sliding-window rate limiting на `/stats/login` через Lua script resolver с `SCRIPT LOAD` и `EVALSHA`.
 
 Проверка ключей:
