@@ -68,6 +68,7 @@ make up
 make test
 make k6-stats
 make k6-stats-browser
+make k6-stats-socket-browser
 make quality
 ```
 
@@ -97,6 +98,18 @@ make k6-stats-browser
 ```
 
 Предупреждение: browser image k6 запускает Chromium с `no-sandbox`, поэтому используйте только доверенные test/staging URL. Сценарий также пишет synthetic visits в выбранное окружение.
+
+Для проверки процесса с несколькими браузерами и Socket.IO есть отдельный сценарий. Он запускает несколько независимых Chromium VU, каждый логинится в `/stats`, ждет подключения к Socket.IO, создает уникальный synthetic visit из browser context и проверяет, что этот же браузер получил socket-событие и увидел рост метрики без reload.
+
+```bash
+K6_BASE_URL=http://127.0.0.1 \
+STATS_LOGIN=admin \
+STATS_PASSWORD=secret \
+K6_BROWSER_VISITORS=3 \
+make k6-stats-socket-browser
+```
+
+Предусловие: приложение должно быть запущено с `SOCKET_IO_ENABLED=true`, а Socket.IO сервер должен быть доступен dashboard-у. При запуске через `php artisan serve` обычно нужно указать прямой client URL, например `SOCKET_IO_CLIENT_URL=http://127.0.0.1:6001`.
 
 В репозитории настроен GitHub Actions workflow `CI`, который на `push` в `main` и на `pull_request` прогоняет `make RUNTIME=local quality`.
 

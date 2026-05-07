@@ -6,6 +6,7 @@ K6_BROWSER_IMAGE ?= grafana/k6:latest-with-browser
 K6_BROWSER_HEADLESS ?= true
 K6_BASE_URL ?= http://127.0.0.1
 K6_VISIT_COUNT ?= 3
+K6_BROWSER_VISITORS ?= 3
 HAS_SAIL := $(shell test -x "$(SAIL)" && echo 1 || echo 0)
 DOCKER_OK := $(shell docker info >/dev/null 2>&1 && echo 1 || echo 0)
 RUNTIME ?= auto
@@ -38,7 +39,7 @@ YELLOW := \033[33m
 MAGENTA := \033[35m
 RESET := \033[0m
 
-.PHONY: help check-php setup install up down restart shell logs migrate fresh seed test k6-stats k6-stats-browser stan psalm analyse format format-check build quality routes
+.PHONY: help check-php setup install up down restart shell logs migrate fresh seed test k6-stats k6-stats-browser k6-stats-socket-browser stan psalm analyse format format-check build quality routes
 
 help: ## Показать список команд
 	@printf '\n$(CYAN)Amopoint Test$(RESET)\n'
@@ -148,6 +149,24 @@ k6-stats-browser: ## Запустить k6 browser-сценарий статис
 		-e STATS_PASSWORD="$(STATS_PASSWORD)" \
 		-e K6_BROWSER_HEADLESS="$(K6_BROWSER_HEADLESS)" \
 		$(K6_BROWSER_IMAGE) run /scripts/stats-browser.js
+
+k6-stats-socket-browser: ## Проверить несколько браузеров и Socket.IO обновление статистики
+	@if ! docker info >/dev/null 2>&1; then \
+		printf '$(YELLOW)Docker is required for k6-stats-socket-browser because k6 browser runs in an isolated container.$(RESET)\n'; \
+		exit 1; \
+	fi
+	@printf '$(YELLOW)Warning: this scenario requires SOCKET_IO_ENABLED=true and a running socket server for BASE_URL=%s.$(RESET)\n' "$(K6_BASE_URL)"
+	@printf '$(YELLOW)Warning: it opens multiple Chromium browsers and writes synthetic visits. Use a trusted test/staging target.$(RESET)\n'
+	mkdir -p tmp/k6
+	docker run --rm --network host \
+		-v "$(CURDIR)/tests/k6:/scripts:ro" \
+		-v "$(CURDIR)/tmp/k6:/tmp/k6" \
+		-e BASE_URL="$(K6_BASE_URL)" \
+		-e STATS_LOGIN="$(STATS_LOGIN)" \
+		-e STATS_PASSWORD="$(STATS_PASSWORD)" \
+		-e BROWSER_VISITORS="$(K6_BROWSER_VISITORS)" \
+		-e K6_BROWSER_HEADLESS="$(K6_BROWSER_HEADLESS)" \
+		$(K6_BROWSER_IMAGE) run /scripts/stats-socket-browser.js
 
 stan: check-php ## Запустить PHPStan level 8
 	$(PHP) vendor/bin/phpstan analyse --memory-limit=1G

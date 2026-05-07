@@ -1,5 +1,11 @@
 <template>
     <main class="stats-shell">
+        <span
+            class="k6-stats-probe"
+            data-k6-stats-probe
+            :data-socket-connected="socketConnected ? 'true' : 'false'"
+            :data-socket-events="socketEvents"
+        >{{ socketEvents }}</span>
         <section class="stats-topline" aria-label="System status">
             <div class="topline-block">sector koprulu / visit telemetry</div>
             <div class="topline-block">window {{ hours }}h / uplink stable</div>
@@ -115,6 +121,8 @@ const hours = payload.hours || 24;
 const total = ref(Number(payload.stats?.total || 0));
 const hourRows = ref(payload.stats?.hours || []);
 const cityRows = ref(payload.stats?.cities || []);
+const socketConnected = ref(false);
+const socketEvents = ref(0);
 let refreshTimer = null;
 let statsSocket = null;
 
@@ -192,7 +200,16 @@ function connectStatsSocket() {
         transports: ['websocket', 'polling'],
     });
 
-    statsSocket.on('visit-statistics:changed', requestStatsRefresh);
+    statsSocket.on('connect', () => {
+        socketConnected.value = true;
+        window.__K6_SOCKET_CONNECTED__ = true;
+    });
+
+    statsSocket.on('visit-statistics:changed', () => {
+        socketEvents.value += 1;
+        window.__K6_SOCKET_EVENTS__ = Number(window.__K6_SOCKET_EVENTS__ || 0) + 1;
+        requestStatsRefresh();
+    });
 }
 
 function refreshStatsWhenVisible() {

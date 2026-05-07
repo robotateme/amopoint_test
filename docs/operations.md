@@ -110,6 +110,45 @@ STATS_PASSWORD       пароль страницы статистики, по у
 
 Предупреждение: официальный k6 browser Docker image запускает Chromium с `no-sandbox`. Используйте только доверенные test/staging URL. Сценарий также пишет synthetic visits в выбранную БД.
 
+## k6 browser + Socket.IO сценарий
+
+Сценарий `tests/k6/stats-socket-browser.js` проверяет процесс с несколькими независимыми browser-сессиями и Socket.IO:
+
+- каждый browser VU логинится в `/stats`;
+- каждый browser VU ждет подключения dashboard-а к Socket.IO;
+- каждый browser VU пишет уникальный synthetic visit из browser context;
+- Laravel после записи визита отправляет событие в Socket.IO server;
+- этот же browser VU проверяет, что получил socket-событие и что основная метрика выросла без reload страницы.
+
+Запуск:
+
+```bash
+K6_BASE_URL=http://127.0.0.1 \
+STATS_LOGIN=admin \
+STATS_PASSWORD=secret \
+K6_BROWSER_VISITORS=3 \
+make k6-stats-socket-browser
+```
+
+Предусловия:
+
+- приложение запущено;
+- `SOCKET_IO_ENABLED=true`;
+- Socket.IO server запущен и доступен dashboard-у;
+- при запуске через `php artisan serve` dashboard-у обычно нужен прямой URL, например `SOCKET_IO_CLIENT_URL=http://127.0.0.1:6001`;
+- для production-like Docker/nginx окружения `/socket.io` должен проксироваться в Socket.IO server.
+
+Переменные:
+
+```text
+K6_BROWSER_VISITORS  количество browser VU, по умолчанию 3
+K6_BROWSER_IMAGE     Docker image k6 browser, по умолчанию grafana/k6:latest-with-browser
+K6_BROWSER_HEADLESS  headless режим Chromium, по умолчанию true
+K6_BASE_URL          адрес приложения, по умолчанию http://127.0.0.1
+STATS_LOGIN          логин страницы статистики, по умолчанию admin
+STATS_PASSWORD       пароль страницы статистики, по умолчанию secret
+```
+
 В CI используется GitHub Actions workflow:
 
 - `.github/workflows/ci.yml`
