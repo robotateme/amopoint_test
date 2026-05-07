@@ -22,6 +22,7 @@ primary_region = 'ams'
   LOG_LEVEL = 'info'
   QUEUE_CONNECTION = 'sync'
   SESSION_DRIVER = 'cookie'
+  STATS_RATE_LIMIT_DRIVER = 'memory'
 
 [http_service]
   internal_port = 8080

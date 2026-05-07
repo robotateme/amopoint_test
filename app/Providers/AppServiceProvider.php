@@ -49,10 +49,11 @@ class AppServiceProvider extends ServiceProvider
         ));
         $this->app->singleton(LoginRateLimiter::class, function (FoundationApplication $app): LoginRateLimiter {
             $config = $app->make(ConfigRepository::class);
+            $driver = (string) $config->get('services.stats.rate_limit.driver', 'redis');
             $maxAttempts = (int) $config->get('services.stats.rate_limit.max_attempts', 5);
             $windowSeconds = (int) $config->get('services.stats.rate_limit.window_seconds', 60);
 
-            if ($app->environment() === 'testing') {
+            if ($app->environment() === 'testing' || $driver === 'memory') {
                 return new InMemorySlidingWindowLoginRateLimiter($maxAttempts, $windowSeconds);
             }
 
