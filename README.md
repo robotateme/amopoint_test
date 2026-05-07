@@ -111,7 +111,7 @@ make k6-stats-socket-browser
 
 Предусловие: приложение должно быть запущено с `SOCKET_IO_ENABLED=true`, а Socket.IO сервер должен быть доступен dashboard-у. При запуске через `php artisan serve` обычно нужно указать прямой client URL, например `SOCKET_IO_CLIENT_URL=http://127.0.0.1:6001`.
 
-Если сценарий падает на ожидании `data-socket-connected`, проверьте диагностические поля в ошибке k6: для `url=same-origin` нужен nginx/proxy на `/socket.io`, а без proxy задайте явный `SOCKET_IO_CLIENT_URL`.
+Если сценарий пишет `Socket.IO is disabled by the application`, тестируемое окружение отдает `SOCKET_IO_ENABLED=false`: включите `SOCKET_IO_ENABLED=true` в env приложения и redeploy/restart, чтобы Laravel перечитал конфиг. Если сценарий падает на ожидании connect, проверьте диагностические поля в ошибке k6: для `url=same-origin` нужен nginx/proxy на `/socket.io`, а без proxy задайте явный `SOCKET_IO_CLIENT_URL`.
 
 В репозитории настроен GitHub Actions workflow `CI`, который на `push` в `main` и на `pull_request` прогоняет `make RUNTIME=local quality`.
 

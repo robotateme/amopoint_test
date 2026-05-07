@@ -138,7 +138,7 @@ make k6-stats-socket-browser
 - при запуске через `php artisan serve` dashboard-у обычно нужен прямой URL, например `SOCKET_IO_CLIENT_URL=http://127.0.0.1:6001`;
 - для production-like Docker/nginx окружения `/socket.io` должен проксироваться в Socket.IO server.
 
-Если k6 падает на ожидании socket connect, сообщение содержит `enabled`, `status`, `url`, `path` и `error`. Для `url=same-origin` должен работать proxy `/socket.io`; если proxy нет, задайте `SOCKET_IO_CLIENT_URL` на публичный адрес Socket.IO server.
+Если k6 пишет `Socket.IO is disabled by the application`, тестируемое окружение отдает `SOCKET_IO_ENABLED=false`: включите `SOCKET_IO_ENABLED=true` в env приложения и redeploy/restart, чтобы Laravel перечитал конфиг. Если k6 падает на ожидании socket connect, сообщение содержит `enabled`, `status`, `url`, `path` и `error`. Для `url=same-origin` должен работать proxy `/socket.io`; если proxy нет, задайте `SOCKET_IO_CLIENT_URL` на публичный адрес Socket.IO server.
 
 Переменные:
 

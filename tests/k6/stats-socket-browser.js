@@ -134,6 +134,16 @@ async function waitForSocketConnection(page) {
     for (let attempt = 0; attempt < 30; attempt += 1) {
         const diagnostics = await socketDiagnostics(page);
 
+        if (diagnostics.enabled !== 'true') {
+            fail([
+                'Socket.IO is disabled by the application',
+                'set SOCKET_IO_ENABLED=true in the tested app environment',
+                `status=${diagnostics.status}`,
+                `url=${diagnostics.url}`,
+                `path=${diagnostics.path}`,
+            ].join('; '));
+        }
+
         if (diagnostics.connected === 'true') {
             return;
         }
