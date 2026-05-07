@@ -3,8 +3,13 @@
         <span
             class="k6-stats-probe"
             data-k6-stats-probe
+            :data-socket-enabled="socketEnabled ? 'true' : 'false'"
             :data-socket-connected="socketConnected ? 'true' : 'false'"
             :data-socket-events="socketEvents"
+            :data-socket-status="socketStatus"
+            :data-socket-url="socketUrl"
+            :data-socket-path="socketPath"
+            :data-socket-error="socketError"
         >{{ socketEvents }}</span>
         <section class="stats-topline" aria-label="System status">
             <div class="topline-block">sector koprulu / visit telemetry</div>
@@ -121,8 +126,13 @@ const hours = payload.hours || 24;
 const total = ref(Number(payload.stats?.total || 0));
 const hourRows = ref(payload.stats?.hours || []);
 const cityRows = ref(payload.stats?.cities || []);
+const socketEnabled = ref(false);
 const socketConnected = ref(false);
 const socketEvents = ref(0);
+const socketStatus = ref('disabled');
+const socketUrl = ref('');
+const socketPath = ref('/socket.io');
+const socketError = ref('');
 let refreshTimer = null;
 let statsSocket = null;
 
@@ -190,19 +200,37 @@ function requestStatsRefresh() {
 
 function connectStatsSocket() {
     const socketConfig = window.__SOCKET_IO__ || {};
+    socketEnabled.value = socketConfig.enabled === true;
+    socketUrl.value = socketConfig.url || 'same-origin';
+    socketPath.value = socketConfig.path || '/socket.io';
 
-    if (socketConfig.enabled !== true) {
+    if (!socketEnabled.value) {
         return;
     }
 
+    socketStatus.value = 'connecting';
+
     statsSocket = io(socketConfig.url || undefined, {
-        path: socketConfig.path || '/socket.io',
+        path: socketPath.value,
         transports: ['websocket', 'polling'],
     });
 
     statsSocket.on('connect', () => {
         socketConnected.value = true;
+        socketStatus.value = 'connected';
+        socketError.value = '';
         window.__K6_SOCKET_CONNECTED__ = true;
+    });
+
+    statsSocket.on('connect_error', (error) => {
+        socketStatus.value = 'connect_error';
+        socketError.value = error?.message || 'Socket.IO connection error';
+    });
+
+    statsSocket.on('disconnect', (reason) => {
+        socketConnected.value = false;
+        socketStatus.value = 'disconnected';
+        socketError.value = reason || '';
     });
 
     statsSocket.on('visit-statistics:changed', () => {

@@ -111,6 +111,8 @@ make k6-stats-socket-browser
 
 Предусловие: приложение должно быть запущено с `SOCKET_IO_ENABLED=true`, а Socket.IO сервер должен быть доступен dashboard-у. При запуске через `php artisan serve` обычно нужно указать прямой client URL, например `SOCKET_IO_CLIENT_URL=http://127.0.0.1:6001`.
 
+Если сценарий падает на ожидании `data-socket-connected`, проверьте диагностические поля в ошибке k6: для `url=same-origin` нужен nginx/proxy на `/socket.io`, а без proxy задайте явный `SOCKET_IO_CLIENT_URL`.
+
 В репозитории настроен GitHub Actions workflow `CI`, который на `push` в `main` и на `pull_request` прогоняет `make RUNTIME=local quality`.
 
 Для Laravel Cloud автодеплоя есть workflow `.github/workflows/laravel-cloud-deploy.yml`. Ему нужен repository secret `LARAVEL_CLOUD_DEPLOY_HOOK`.

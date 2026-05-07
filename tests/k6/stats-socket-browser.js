@@ -131,13 +131,48 @@ async function waitForDashboard(page) {
 }
 
 async function waitForSocketConnection(page) {
-    await page.locator('[data-k6-stats-probe][data-socket-connected="true"]').waitFor({ state: 'attached' });
+    for (let attempt = 0; attempt < 30; attempt += 1) {
+        const diagnostics = await socketDiagnostics(page);
+
+        if (diagnostics.connected === 'true') {
+            return;
+        }
+
+        await page.waitForTimeout(1000);
+    }
+
+    const diagnostics = await socketDiagnostics(page);
+
+    fail([
+        'Socket.IO did not connect',
+        `enabled=${diagnostics.enabled}`,
+        `status=${diagnostics.status}`,
+        `url=${diagnostics.url}`,
+        `path=${diagnostics.path}`,
+        `error=${diagnostics.error || 'none'}`,
+    ].join('; '));
 }
 
 async function socketEventsCount(page) {
     const rawValue = await page.locator('[data-k6-stats-probe]').textContent();
 
     return Number(String(rawValue).trim() || 0);
+}
+
+async function socketDiagnostics(page) {
+    return page.evaluate(() => {
+        const probe = document.querySelector('[data-k6-stats-probe]');
+
+        return {
+            enabled: probe?.getAttribute('data-socket-enabled') || 'false',
+            connected: probe?.getAttribute('data-socket-connected') || 'false',
+            events: probe?.getAttribute('data-socket-events') || '0',
+            status: probe?.getAttribute('data-socket-status') || 'unknown',
+            url: probe?.getAttribute('data-socket-url') || 'unknown',
+            path: probe?.getAttribute('data-socket-path') || 'unknown',
+            error: probe?.getAttribute('data-socket-error') || '',
+        };
+    });
 }
 
 function errorMessage(error) {
