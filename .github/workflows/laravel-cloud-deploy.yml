@@ -9,5 +9,21 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
+      - name: Check deploy hook
+        id: deploy-hook
+        env:
+          LARAVEL_CLOUD_DEPLOY_HOOK: ${{ secrets.LARAVEL_CLOUD_DEPLOY_HOOK }}
+        run: |
+          if [ -z "$LARAVEL_CLOUD_DEPLOY_HOOK" ]; then
+            echo "configured=false" >> "$GITHUB_OUTPUT"
+            echo "LARAVEL_CLOUD_DEPLOY_HOOK is not configured; skipping Laravel Cloud deploy."
+            exit 0
+          fi
+
+          echo "configured=true" >> "$GITHUB_OUTPUT"
+
       - name: Trigger Laravel Cloud deploy
-        run: curl -X POST "${{ secrets.LARAVEL_CLOUD_DEPLOY_HOOK }}?commit_hash=${{ github.sha }}"
+        if: steps.deploy-hook.outputs.configured == 'true'
+        env:
+          LARAVEL_CLOUD_DEPLOY_HOOK: ${{ secrets.LARAVEL_CLOUD_DEPLOY_HOOK }}
+        run: curl --fail-with-body -X POST "${LARAVEL_CLOUD_DEPLOY_HOOK}?commit_hash=${{ github.sha }}"
