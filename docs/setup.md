@@ -67,7 +67,7 @@ STATS_RATE_LIMIT_WINDOW_SECONDS=60
 
 ## Запуск без Sail
 
-Подходит, если локально уже установлены PHP 8.5.5, Composer, Node.js, PostgreSQL и Redis.
+Подходит, если локально уже установлены PHP 8.5.0, Composer, Node.js, PostgreSQL и Redis.
 
 ```bash
 composer install
@@ -81,7 +81,7 @@ php artisan serve
 
 В этом режиме проверьте `DB_HOST`, `DB_PORT`, `REDIS_HOST` и `REDIS_PORT`.
 
-Если `make` пишет, что Docker или Podman не запущен, это больше не блокирует локальные команды проверки. Для локального режима нужен PHP 8.5.5:
+Если `make` пишет, что Docker или Podman не запущен, это больше не блокирует локальные команды проверки. Для локального режима нужен PHP 8.5.0:
 
 ```bash
 make RUNTIME=local test

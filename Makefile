@@ -45,8 +45,8 @@ check-php: ## Проверить локальную версию PHP
 	@if [ "$(RUNTIME)" = "local" ]; then \
 		version_id="$$(php -r 'echo PHP_VERSION_ID;' 2>/dev/null || echo 0)"; \
 		version="$$(php -r 'echo PHP_VERSION;' 2>/dev/null || echo unavailable)"; \
-		if [ "$$version_id" -lt 80505 ]; then \
-			printf '$(YELLOW)PHP 8.5.5+ required for local runtime. Current PHP: %s.$(RESET)\n' "$$version"; \
+		if [ "$$version_id" -lt 80500 ]; then \
+			printf '$(YELLOW)PHP 8.5.0+ required for local runtime. Current PHP: %s.$(RESET)\n' "$$version"; \
 			exit 1; \
 		fi; \
 	fi
