@@ -73,4 +73,13 @@ final class ApplicationEndpointsTest extends TestCase
             ->assertRedirect('/stats')
             ->assertCookie('stats_token');
     }
+
+    public function test_forwarded_https_proto_is_used_for_vite_asset_urls(): void
+    {
+        $this->withHeader('X-Forwarded-Proto', 'https')
+            ->get('http://amopoint-test.fly.dev/stats/login')
+            ->assertOk()
+            ->assertSee('href="https://amopoint-test.fly.dev/build/', false)
+            ->assertDontSee('href="http://amopoint-test.fly.dev/build/', false);
+    }
 }
