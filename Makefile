@@ -103,8 +103,8 @@ logs: ## Показать логи Sail
 migrate: check-php ## Выполнить миграции
 	$(ARTISAN) migrate
 
-fresh: check-php ## Пересоздать схему и наполнить тестовыми данными
-	$(ARTISAN) migrate:fresh --seed
+fresh: check-php ## Пересоздать схему без тестовых данных
+	$(ARTISAN) migrate:fresh
 
 seed: check-php ## Запустить сидеры
 	$(ARTISAN) db:seed

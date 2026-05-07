@@ -15,8 +15,11 @@ RUN npm run build
 FROM php:8.5-cli-bookworm AS vendor
 
 RUN apt-get update \
-    && apt-get install -y --no-install-recommends git unzip libzip-dev libpq-dev libsqlite3-dev \
+    && apt-get install -y --no-install-recommends git unzip libzip-dev libpq-dev libsqlite3-dev $PHPIZE_DEPS \
+    && pecl install redis \
+    && docker-php-ext-enable redis \
     && docker-php-ext-install bcmath pdo_pgsql pdo_sqlite zip \
+    && apt-get purge -y --auto-remove -o APT::AutoRemove::RecommendsImportant=false $PHPIZE_DEPS \
     && rm -rf /var/lib/apt/lists/*
 
 COPY --from=composer:2 /usr/bin/composer /usr/bin/composer
@@ -29,8 +32,11 @@ RUN composer install --no-dev --no-interaction --prefer-dist --optimize-autoload
 FROM php:8.5-fpm-bookworm
 
 RUN apt-get update \
-    && apt-get install -y --no-install-recommends nginx supervisor libpq-dev libsqlite3-dev \
+    && apt-get install -y --no-install-recommends nginx supervisor libpq-dev libsqlite3-dev $PHPIZE_DEPS \
+    && pecl install redis \
+    && docker-php-ext-enable redis \
     && docker-php-ext-install bcmath pdo_pgsql pdo_sqlite \
+    && apt-get purge -y --auto-remove -o APT::AutoRemove::RecommendsImportant=false $PHPIZE_DEPS \
     && rm -rf /var/lib/apt/lists/*
 
 WORKDIR /var/www/html
@@ -39,7 +45,8 @@ COPY --from=vendor /var/www/html/vendor ./vendor
 COPY --from=frontend /app/public/build ./public/build
 COPY . .
 
-RUN mkdir -p storage/framework/cache storage/framework/sessions storage/framework/views storage/logs bootstrap/cache \
+RUN find bootstrap/cache -type f ! -name .gitignore -delete \
+    && mkdir -p storage/framework/cache storage/framework/sessions storage/framework/views storage/logs bootstrap/cache \
     && chown -R www-data:www-data storage bootstrap/cache \
     && chmod -R ug+rwx storage bootstrap/cache
 
