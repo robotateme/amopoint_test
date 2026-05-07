@@ -78,6 +78,38 @@ STATS_HOURS     окно статистики, по умолчанию 1
 
 Сценарий рассчитан на smoke/regression проверку корректности агрегатов, а не на нагрузочный тест.
 
+## k6 browser smoke test статистики
+
+Browser-сценарий `tests/k6/stats-browser.js` проверяет пользовательское поведение в Chromium:
+
+- открывает `/stats/login`;
+- заполняет форму логина;
+- проверяет, что dashboard открылся;
+- проверяет наличие заголовка статистики, подписей графиков и canvas-графика;
+- отправляет synthetic visit из browser context;
+- перезагружает dashboard и проверяет рост основной метрики.
+
+Запуск выполняется через Docker image с браузером:
+
+```bash
+K6_BASE_URL=http://127.0.0.1 \
+STATS_LOGIN=admin \
+STATS_PASSWORD=secret \
+make k6-stats-browser
+```
+
+Переменные:
+
+```text
+K6_BROWSER_IMAGE     Docker image k6 browser, по умолчанию grafana/k6:latest-with-browser
+K6_BROWSER_HEADLESS  headless режим Chromium, по умолчанию true
+K6_BASE_URL          адрес приложения, по умолчанию http://127.0.0.1
+STATS_LOGIN          логин страницы статистики, по умолчанию admin
+STATS_PASSWORD       пароль страницы статистики, по умолчанию secret
+```
+
+Предупреждение: официальный k6 browser Docker image запускает Chromium с `no-sandbox`. Используйте только доверенные test/staging URL. Сценарий также пишет synthetic visits в выбранную БД.
+
 В CI используется GitHub Actions workflow:
 
 - `.github/workflows/ci.yml`

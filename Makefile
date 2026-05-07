@@ -2,6 +2,8 @@ DEFAULT_GOAL := help
 
 SAIL ?= ./vendor/bin/sail
 K6_IMAGE ?= grafana/k6:1.3.0
+K6_BROWSER_IMAGE ?= grafana/k6:latest-with-browser
+K6_BROWSER_HEADLESS ?= true
 K6_BASE_URL ?= http://127.0.0.1
 K6_VISIT_COUNT ?= 3
 HAS_SAIL := $(shell test -x "$(SAIL)" && echo 1 || echo 0)
@@ -36,7 +38,7 @@ YELLOW := \033[33m
 MAGENTA := \033[35m
 RESET := \033[0m
 
-.PHONY: help check-php setup install up down restart shell logs migrate fresh seed test k6-stats stan psalm analyse format format-check build quality routes
+.PHONY: help check-php setup install up down restart shell logs migrate fresh seed test k6-stats k6-stats-browser stan psalm analyse format format-check build quality routes
 
 help: ## Показать список команд
 	@printf '\n$(CYAN)Amopoint Test$(RESET)\n'
@@ -129,6 +131,23 @@ k6-stats: ## Запустить k6-сценарий проверки стати�
 		-e VISIT_COUNT="$(K6_VISIT_COUNT)" \
 		-e STATS_HOURS="$(STATS_HOURS)" \
 		$(K6_IMAGE) run /scripts/stats.js
+
+k6-stats-browser: ## Запустить k6 browser-сценарий статистики
+	@if ! docker info >/dev/null 2>&1; then \
+		printf '$(YELLOW)Docker is required for k6-stats-browser because k6 browser runs in an isolated container.$(RESET)\n'; \
+		exit 1; \
+	fi
+	@printf '$(YELLOW)Warning: k6-stats-browser opens Chromium and writes synthetic visits to BASE_URL=%s. Use a trusted test/staging target.$(RESET)\n' "$(K6_BASE_URL)"
+	@printf '$(YELLOW)Warning: the k6 browser Docker image launches Chromium with no-sandbox; do not point it at untrusted sites.$(RESET)\n'
+	mkdir -p tmp/k6
+	docker run --rm --network host \
+		-v "$(CURDIR)/tests/k6:/scripts:ro" \
+		-v "$(CURDIR)/tmp/k6:/tmp/k6" \
+		-e BASE_URL="$(K6_BASE_URL)" \
+		-e STATS_LOGIN="$(STATS_LOGIN)" \
+		-e STATS_PASSWORD="$(STATS_PASSWORD)" \
+		-e K6_BROWSER_HEADLESS="$(K6_BROWSER_HEADLESS)" \
+		$(K6_BROWSER_IMAGE) run /scripts/stats-browser.js
 
 stan: check-php ## Запустить PHPStan level 8
 	$(PHP) vendor/bin/phpstan analyse --memory-limit=1G

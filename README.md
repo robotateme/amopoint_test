@@ -67,6 +67,7 @@ make help
 make up
 make test
 make k6-stats
+make k6-stats-browser
 make quality
 ```
 
@@ -85,6 +86,17 @@ make k6-stats
 Предупреждение: сценарий пишет synthetic visits в `/api/visits` выбранного окружения и проверяет рост `/stats?hours=1`. Запускайте его на test/staging базе, если не хотите добавлять тестовые визиты в production.
 
 Сценарий является smoke/regression проверкой корректности агрегатов, а не нагрузочным тестом.
+
+Для проверки поведения в реальном браузере есть отдельный k6 browser сценарий. Он запускает Chromium в Docker, логинится в `/stats`, проверяет dashboard и canvas-графики, создает synthetic visit из browser context и проверяет обновление метрики после reload.
+
+```bash
+K6_BASE_URL=http://127.0.0.1 \
+STATS_LOGIN=admin \
+STATS_PASSWORD=secret \
+make k6-stats-browser
+```
+
+Предупреждение: browser image k6 запускает Chromium с `no-sandbox`, поэтому используйте только доверенные test/staging URL. Сценарий также пишет synthetic visits в выбранное окружение.
 
 В репозитории настроен GitHub Actions workflow `CI`, который на `push` в `main` и на `pull_request` прогоняет `make RUNTIME=local quality`.
 
