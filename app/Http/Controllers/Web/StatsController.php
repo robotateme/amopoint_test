@@ -1,7 +1,8 @@
 <?php
 
-namespace App\Http\Controllers;
+namespace App\Http\Controllers\Web;
 
+use App\Http\Controllers\Controller;
 use Application\Visit\Query\GetVisitStatistics\GetVisitStatisticsHandler;
 use Application\Visit\Query\GetVisitStatistics\GetVisitStatisticsQuery;
 use Illuminate\Contracts\View\View;

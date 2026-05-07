@@ -1,7 +1,8 @@
 <?php
 
-namespace App\Http\Controllers;
+namespace App\Http\Controllers\Web;
 
+use App\Http\Controllers\Controller;
 use Application\Auth\Command\Login\LoginCommand;
 use Application\Auth\Command\Login\LoginHandler;
 use Application\Auth\LoginRateLimiter;

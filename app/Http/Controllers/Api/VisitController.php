@@ -1,7 +1,8 @@
 <?php
 
-namespace App\Http\Controllers;
+namespace App\Http\Controllers\Api;
 
+use App\Http\Controllers\Controller;
 use Application\Visit\Command\RecordVisit\RecordVisitCommand;
 use Application\Visit\Command\RecordVisit\RecordVisitHandler;
 use Illuminate\Http\JsonResponse;

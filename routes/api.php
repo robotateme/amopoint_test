@@ -1,7 +1,7 @@
 <?php
 
-use App\Http\Controllers\JokeController;
-use App\Http\Controllers\VisitController;
+use App\Http\Controllers\Api\JokeController;
+use App\Http\Controllers\Api\VisitController;
 use Illuminate\Support\Facades\Route;
 
 Route::get('/jokes', [JokeController::class, 'index']);
