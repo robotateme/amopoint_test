@@ -67,7 +67,8 @@ FLY_API_TOKEN
 Текущий `fly.toml` ориентирован на один web process и обычный application deploy:
 
 - `CACHE_STORE=database`
+- `STATS_RATE_LIMIT_DRIVER=memory`
 - `SESSION_DRIVER=cookie`
 - `QUEUE_CONNECTION=sync`
 
-Это хороший baseline для тестового или небольшого сервиса. Для роста нагрузки дальше обычно выносят queue worker, Redis и отдельную стратегию кэша.
+Это хороший baseline для тестового или небольшого сервиса без Redis. Если включаете Redis, задайте реальный `REDIS_HOST`/`REDIS_URL` и можно вернуть `CACHE_STORE=redis`, `STATS_RATE_LIMIT_DRIVER=redis`.

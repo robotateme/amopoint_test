@@ -14,6 +14,7 @@ LOG_CHANNEL=stderr
 QUEUE_CONNECTION=sync
 SESSION_DRIVER=cookie
 CACHE_STORE=database
+STATS_RATE_LIMIT_DRIVER=memory
 STATS_LOGIN=admin
 STATS_PASSWORD=<secret>
 STATS_JWT_SECRET=<random-secret>
@@ -51,3 +52,5 @@ LARAVEL_CLOUD_DEPLOY_HOOK
 
 Текущий Socket.IO sidecar рассчитан на Docker/nginx окружение и выключен для Laravel Cloud через `SOCKET_IO_ENABLED=false`.
 Dashboard сохраняет fallback обновления статистики по таймеру. Для managed realtime на Laravel Cloud следующий шаг - перевести статистику на Laravel Reverb / Echo и подключить Cloud WebSockets.
+
+Если включаете Socket.IO для проверки k6, нужно отдельно запустить доступный Socket.IO server и задать `SOCKET_IO_ENABLED=true`, `SOCKET_IO_CLIENT_URL` и `SOCKET_IO_SERVER_URL`. Без этого сценарий `make k6-stats-socket-browser` корректно упадет как disabled.
