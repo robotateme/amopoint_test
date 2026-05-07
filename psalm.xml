@@ -1,6 +1,7 @@
 <?xml version="1.0"?>
 <psalm
     errorLevel="1"
+    phpVersion="8.5"
     resolveFromConfigFile="true"
     findUnusedBaselineEntry="true"
     findUnusedCode="false"
